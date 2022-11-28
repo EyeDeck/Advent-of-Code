@@ -1,0 +1,41 @@
+def get_dict_bounds(d):
+    k = d.keys()
+    return ((min(k, key=itemgetter(0))[0], min(k, key=itemgetter(1))[1]),
+            (max(k, key=itemgetter(0))[0], max(k, key=itemgetter(1))[1]))
+
+
+def render_array(bd):
+    as_str = np.array2string(np.swapaxes(bd,0,1), max_line_width=200, separator=' ', threshold=1000, edgeitems=1000,
+                          formatter={'str_kind': lambda x: x})
+    print('\x1b[1;1H\r', re.sub('[\[\]]', '', as_str), end='\n')
+
+
+def dict_to_array(to_render):
+    layer_bounds = get_dict_bounds(to_render)
+    offset = (abs(min(layer_bounds[0][0], 0)), abs(min(layer_bounds[0][1], 0)))
+    adjusted_bounds = layer_bounds[1][0] + offset[0] + 1, layer_bounds[1][1] + offset[1] + 1
+    board = np.full((adjusted_bounds), fill_value=' ', dtype=str)
+    for k, v in to_render.items():
+        if not isinstance(k, tuple):
+            continue
+        board[k[0]+offset[0], k[1]+offset[1]] = v
+
+    return board
+
+
+def prog_out_to_array(prog_output):
+    prog_ascii = [chr(c) for c in prog_output]
+    y = 0
+    x_off = 0
+    render = {}
+    for x, char in enumerate(prog_ascii):
+        if char == '\n':
+            y += 1
+            x_off = x+1
+        else:
+            render[x-x_off, y] = char
+    return dict_to_array(render)
+
+# usage:
+#  pass a dict where keys are (x,y) tuples to dict_to_array
+#  the max bounds will be calculated, and then overlaid in a numpy 2d array

@@ -1,0 +1,1 @@
+print(f'part1: {min([sum([abs(i-v) for v in [int(i) for i in open("d7.txt").read().split(",")]]) for i in range(2000)])}\npart2: {min([sum([((d := abs(v-i))+1) * d // 2 for v in [int(i) for i in open("d7.txt").read().split(",")]]) for i in range(2000)])}')

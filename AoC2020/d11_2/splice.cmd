@@ -1,0 +1,1 @@
+ffmpeg -y -f image2 -r 15 -i %%04d.png -vf fps=15 -r 15 -framerate 15 out.gif
