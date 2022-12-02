@@ -1,3 +1,4 @@
+import string
 from collections import deque
 import heapq
 from functools import lru_cache
@@ -24,6 +25,65 @@ from operator import itemgetter
 # mkcls('Name', f1=v1, f2=v2, ...)
 
 INF = sys.maxsize
+
+def heurparse(f, try_grid=True):
+    with open(f) as file:
+        return rheurparse(file.read(), try_grid)
+
+def rheurparse(raw, try_grid):
+    # print(raw)
+    if isinstance(raw, str):
+        if raw.isdigit():
+            return int(raw)
+
+        if len(raw) == 1:
+            return raw
+        # print('RAW:', raw, '\n')
+
+        # if there's a double newline, that should almost always be split on
+        if raw.count('\n\n'):
+            # print('found \\n\\n')
+
+            # chunks = [rheurparse(line, try_grid) for line in raw.split('\n\n')] # raw.split('\n\n')
+            chunks = [line.split('\n') for line in raw.split('\n\n')]
+            # chunks = raw.split('\n\n')
+            # print('chunks:', chunks)
+            # input()
+            try:
+                if (type(chunks[0][0]) != type(chunks[0][1]) and isinstance(chunks[0][0], str)) \
+                        or (re.match(r'\w', chunks[0][0]) and not re.match(r'\w', chunks[0][1])):
+                    # print('asdafasfdasd')
+                    return {v[0].strip('.:,- '): rheurparse('\n'.join(v[1:]), try_grid) for v in chunks}
+            except:
+                # print('damn')
+                pass
+
+            return chunks # [rheurparse(line) for line in chunks]
+
+        raw_set = set(raw)
+        # if it's all . and # it's probably a grid
+        if '\n' in raw_set:
+            # print(raw_set)
+            if try_grid == 'force' or (try_grid and raw_set <= set(' ([{<>}])#.v^\n') or len(re.findall(r'\.|#', raw)) > len(raw) * 0.8):
+                # print('gridding, n', raw.strip().count("\n"), '\n#############')
+                grid = {}
+                for y, line in enumerate(raw.split('\n')):
+                    for x, c in enumerate(line):
+                        # grids tend to be 1-indexed in descriptions
+                        grid[x+1, y+1] = rheurparse(c, try_grid)
+                return grid
+            return [rheurparse(line, try_grid) for line in raw.split('\n')]
+
+        if ',' in raw_set:
+            return [rheurparse(line, try_grid) for line in raw.split(',')]
+
+        # if re.match(re.match(r"^(?:\w+ +\w*)+$", raw.strip()):
+        if ' ' in raw_set and raw_set <= set(string.ascii_lowercase + string.digits + '_ '):
+            # print(f'space split "{raw}"')
+            return [rheurparse(line, try_grid) for line in re.sub(' +', ' ', raw.strip()).split(' ')]
+        # print(f'fell through "{raw}"')
+
+    return raw
 
 
 def print_2d(padding, *dicts, constrain=(-256, -256, 256, 256)):
