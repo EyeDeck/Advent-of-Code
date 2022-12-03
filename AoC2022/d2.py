@@ -1,13 +1,4 @@
-from aoc import *
-
-
-def p1():
-    return sum(scores[line] for line in data)
-
-
-def p2():
-    return sum(scores[conversion[line]] for line in data)
-
+import sys
 
 LOSS = 0
 DRAW = 3
@@ -46,5 +37,5 @@ if len(sys.argv) > 1:
 with open(f) as file:
     data = [tuple(line.strip().split(' ')) for line in file]
 
-print(f'part1: {p1()}')
-print(f'part2: {p2()}')
+print(f'part1: { sum(scores[line] for line in data) }')
+print(f'part2: { sum(scores[conversion[line]] for line in data) }')
