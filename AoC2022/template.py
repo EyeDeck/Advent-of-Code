@@ -41,8 +41,9 @@ f = f'd{day}.txt'
 if len(sys.argv) > 1:
     f = sys.argv[1]
 
-with open(f) as file:
-    data = [line.strip() for line in file]
+# with open(f) as file:
+#     data = [line.strip() for line in file]
+data = heurparse(f)
 
 print(f'part1: {p1()}')
 print(f'part2: {p2()}')
