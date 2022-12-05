@@ -4,18 +4,11 @@ import sys
 import re
 
 
-def p1():
+def solve(p2):
     c = copy.deepcopy(crates)
     for m, f, t in moves:
-        for _ in range(m):
-            c[t - 1].append(c[f - 1].pop())
-    return ''.join([col[-1] for col in c])
-
-
-def p2():
-    c = copy.deepcopy(crates)
-    for m, f, t in moves:
-        c[t - 1].extend(c[f - 1][-m:])
+        s = c[f - 1][-m:]
+        c[t - 1].extend(s if p2 else reversed(s))
         c[f - 1] = c[f - 1][:-m]
     return ''.join([col[-1] for col in c])
 
@@ -37,7 +30,7 @@ for y, line in enumerate(crates_raw.split('\n')):
             crates[x // 4][y] = char
 crates = [[c for c in reversed(line) if c != ' '] for line in crates]
 
-moves = [[int(i) for i in re.findall(r'(\d+)', line)] for line in moves_raw.split('\n')]
+moves = [[int(i) for i in re.findall(r'(\d+)', line)] for line in moves_raw.split('\n') if line]
 
-print(f'part1: {p1()}')
-print(f'part2: {p2()}')
+print(f'part1: {solve(False)}')
+print(f'part2: {solve(True)}')
