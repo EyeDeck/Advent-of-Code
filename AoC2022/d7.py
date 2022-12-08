@@ -9,8 +9,12 @@ def p1():
 
 
 def p2():
-    total_space = 70000000
-    needed_space = 30000000
+    if len(sys.argv) > 3:  # needed for bigboy input
+        total_space = int(sys.argv[2])
+        needed_space = int(sys.argv[3])
+    else:
+        total_space = 70000000
+        needed_space = 30000000
 
     found = []
     rtraverse(dirs, found)

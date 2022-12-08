@@ -87,7 +87,7 @@ def rheurparse(raw, try_grid):
 
 
 def print_2d(padding, *dicts, constrain=(-256, -256, 256, 256)):
-    print_2d_repl(padding, *([v, {}] for v in dicts))
+    print_2d_repl(padding, *([v, {}] for v in dicts), constrain=constrain)
 
 
 def print_2d_repl(padding, *dicts, constrain=(-256, -256, 256, 256)):
@@ -97,9 +97,6 @@ def print_2d_repl(padding, *dicts, constrain=(-256, -256, 256, 256)):
     from operator import itemgetter
     bounds = max(constrain[0], min(points, key=itemgetter(0))[0]), max(constrain[1], min(points, key=itemgetter(1))[1]), \
              min(constrain[2], max(points, key=itemgetter(0))[0]), min(constrain[2], max(points, key=itemgetter(1))[1])
-    # bounds = max(constrain[0], min(x[0] for x in points)), max(constrain[1], min(y[1] for y in points)),\
-    #         min(constrain[2], max(x[0] for x in points)), min(constrain[3], max(y[1] for y in points))
-    # print(bounds)
     for y in range(bounds[1], bounds[3]+1):
         for x in range(bounds[0], bounds[2] + 1):
             c = padding
