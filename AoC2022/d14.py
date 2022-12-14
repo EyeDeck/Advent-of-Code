@@ -1,13 +1,15 @@
 import copy
 import sys
 from operator import itemgetter
+from aoc import print_2d
 
 
 def solve(board, p2):
-    i = 0
     if p2:
-        for i in range(-2000, 2000):
-            board[i, board['abyss'] + 1] = '#'
+        abyss = board['abyss']
+        for i in range(-abyss-1, abyss+2):
+            board[500+i, (abyss + 1)] = '#'
+    i = 0
     while step(board):
         i += 1
         # print_2d('.', board, constrain=(-9999, -9999, 9999, 9999))
