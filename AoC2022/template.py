@@ -45,5 +45,5 @@ if len(sys.argv) > 1:
 #     data = [line.strip() for line in file]
 data = heurparse(f)
 
-print(f'part1: {p1()}')
-print(f'part2: {p2()}')
+print('part1:', p1() )
+print('part2:', p2() )
