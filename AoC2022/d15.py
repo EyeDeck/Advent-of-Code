@@ -48,6 +48,41 @@ def p1():
 
 
 def p2():
+    sensors = {}
+    for sensor, coords in enumerate(data):
+        a, b, x, y = coords
+        r = sum([abs(n) for n in vsub((a, b), (x, y))])
+        sensors[a,b] = r
+
+    checked = set()
+    borders = {}
+    for sensor_a, r_a in sensors.items():
+        for sensor_b, r_b in sensors.items():
+            if sensor_a == sensor_b:
+                continue
+            pair = frozenset({sensor_a, sensor_b})
+            if pair in checked:
+                continue
+            checked.add(pair)
+
+            d = vdistm(sensor_a,sensor_b)
+            if d-2 == (r_a + r_b):
+                # print(f'{sensor_a} r {r_a}, {sensor_b} r {r_b}')
+                borders[sensor_a] = r_a
+                borders[sensor_b] = r_b
+
+    point_count = defaultdict(int)
+    for points in [sorted(list(diam(*k, v+1))) for k, v in borders.items()]:
+        for point in points:
+            point_count[point] += 1
+
+    best = max(point_count, key=point_count.get)
+    # print(point_count[best])
+    return best[0] * 4000000 + best[1]
+
+
+
+def p2x():
     x_slices = defaultdict(list)
     for sensor, coords in enumerate(data):
         print('calcing slices for sensor', sensor, end='\r')
