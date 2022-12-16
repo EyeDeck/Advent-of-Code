@@ -17,6 +17,7 @@ def diam(x, y, r):
 
 
 def p1():
+    '''slooooow but I don't feel like fixing it'''
     tgt_line = 2000000
     sensors = {}
     tgt_borders = set()
@@ -70,35 +71,28 @@ def p2():
                 # print(f'{sensor_a} r {r_a}, {sensor_b} r {r_b}')
                 borders[sensor_a] = r_a
                 borders[sensor_b] = r_b
+                # # longer, shorter = max(r_a, r_b), min(r_a, r_b)
+                # midpoint = ((r_a + r_b) / r_b) / 4
+                # x_dist = sensor_a[0] - sensor_b[0]
+                # y_dist = sensor_a[1] - sensor_b[1]
+                # print(midpoint, (x_dist * midpoint) + sensor_a[0], (y_dist * midpoint) + sensor_b[0])
+                # [2385258, 3112735]
 
-    point_count = defaultdict(int)
-    for points in [sorted(list(diam(*k, v+1))) for k, v in borders.items()]:
-        for point in points:
-            point_count[point] += 1
-
-    best = max(point_count, key=point_count.get)
-    # print(point_count[best])
-    return best[0] * 4000000 + best[1]
-
-
-
-def p2x():
     x_slices = defaultdict(list)
-    for sensor, coords in enumerate(data):
-        print('calcing slices for sensor', sensor, end='\r')
-        a, b, x, y = coords
-        r = sum([abs(n) for n in vsub((a, b), (x, y))])
+    for coords, r in borders.items():
+        print('calcing slices for sensor', coords, end='\r')
+        a, b = coords
 
         for r_off in range(-r, r + 1):
             x_off = r - abs(r_off)
             x_slices[a + r_off].append((b - x_off, b + x_off))
 
-    print('condensing overlaps on x axis...')
-    x_slices_overlapped = {k: overlap_ranges(v) for k, v in x_slices.items()}
+    # print('condensing overlaps on x axis...')
+    # x_slices_overlapped = {k: overlap_ranges(v) for k, v in x_slices.items()}
 
     print('finding gaps on x axis...')
     points = set()
-    for x, ranges in x_slices_overlapped.items():
+    for x, ranges in x_slices.items():
         # print(x, ':', ranges)
         for i in range(len(ranges) - 1):
             l, r = ranges[i], ranges[i + 1]
@@ -109,20 +103,19 @@ def p2x():
     del x_slices
 
     y_slices = defaultdict(list)
-    for sensor, coords in enumerate(data):
-        print('calcing slices for sensor', sensor, end='\r')
-        a, b, x, y = coords
-        r = sum([abs(n) for n in vsub((a, b), (x, y))])
+    for coords, r in borders.items():
+        print('calcing slices for sensor', coords, end='\r')
+        a, b = coords
 
         for r_off in range(-r, r + 1):
             x_off = r - abs(r_off)
             y_slices[b + r_off].append((a - x_off, a + x_off))
 
-    print('condensing overlaps on y axis...')
-    y_slices_overlapped = {k: overlap_ranges(v) for k, v in y_slices.items()}
+    # print('condensing overlaps on y axis...')
+    # y_slices_overlapped = {k: overlap_ranges(v) for k, v in y_slices.items()}
 
     print('matching gaps on y axis...')
-    for y, ranges in y_slices_overlapped.items():
+    for y, ranges in y_slices.items():
         # print(x, ':', ranges)
         for i in range(len(ranges) - 1):
             l, r = ranges[i], ranges[i + 1]
@@ -155,5 +148,5 @@ if len(sys.argv) > 1:
 with open(f) as file:
     data = [[int(i) for i in re.findall(r'[\-0-9]+', line)] for line in file]
 
-# print('part1:', p1())
+print('part1:', p1())
 print('part2:', p2())
