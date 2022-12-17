@@ -1,13 +1,8 @@
 import copy
 import heapq
-import sys
 import re
-from itertools import combinations, permutations
-
-from collections import defaultdict  # defaultdict(int)
-import functools  # @functools.cache
+import sys
 from collections import *
-from math import *
 
 
 def try_add(d, curr, open, pressure):
