@@ -25,34 +25,18 @@ for id, rock in enumerate(rocks_raw.split('\n\n')):
         for x, c in enumerate(line):
             if c == '#':
                 rocks[id][x, -y] = '#'
-# for rock in rocks.values():
-#     # print(rock)
-#     print_2d('.', rock)
-#     print()
 
 
-CURR_DIR = 0
-CURR_ROCK = 0
+def next_dir(curr):
+    r = data[curr]
+    curr = (curr + 1) % len(data)
+    return r, curr
 
 
-def next_dir():
-    global CURR_DIR
-    r = data[CURR_DIR]
-    CURR_DIR += 1
-    if CURR_DIR >= len(data):
-        CURR_DIR = 0
-    # print('!', data[CURR_DIR], CURR_DIR)
-    return r
-
-
-def next_rock(lvl):
-    global CURR_ROCK
-    r = rocks[CURR_ROCK]
-    CURR_ROCK += 1
-    if CURR_ROCK >= len(rocks):
-        CURR_ROCK = 0
-    # print(rocks[CURR_ROCK])
-    return {(x, y + lvl - 4): k for (x, y), k in r.items()}
+def next_rock(lvl, curr):
+    r = rocks[curr]
+    curr = (curr + 1) % len(rocks)
+    return {(x, y + lvl - 4): k for (x, y), k in r.items()}, curr
 
 
 def move_rock(r, x_mod, y_mod):
@@ -73,20 +57,19 @@ def p1():
     # board.update({(5, i): '|' for i in range(-5, 0)})
     # print_2d('.', board)
     # for rock_id in range(2022):
-    for rock_id in range(len(data) * 3):
+    data_index = 0
+    rock_index = 0
+    for rock_id in range(2022):
         for y in range(max_y - 6, max_y):
             board.update({(-3, y): '|', (5, y): '|'})
 
-        rock = next_rock(max_y)
+        rock, rock_index = next_rock(max_y, rock_index)
         # print('new rock:')
         # print_2d('.', board, rock)
 
         while True:
-            next_jet = next_dir()
+            next_jet, data_index = next_dir(data_index)
             # print(next_jet)
-
-            if CURR_DIR == 0:
-                board[8, max_y] = '<'
 
             next_jet = -1 if next_jet == '<' else 1
             if can_move(rock, board, next_jet, 0):
@@ -125,6 +108,9 @@ def p2():
     # board.update({(5, i): '|' for i in range(-5, 0)})
     # print_2d('.', board)
     # for rock_id in range(2022):
+    data_index = 0
+    rock_index = 0
+
     stop_at = 100000000000
     for rock_id in range(100000000):
         stop_at -= 1
@@ -136,20 +122,20 @@ def p2():
         for y in range(max_y - 6, max_y):
             board.update({(-3, y): '|', (5, y): '|'})
 
-        rock = next_rock(max_y)
+        rock, rock_index = next_rock(max_y, rock_index)
         # print('new rock:')
         # print_2d('.', board, rock)
 
         while True:
-            next_jet = next_dir()
+            next_jet, data_index = next_dir(data_index)
             # print(next_jet)
 
-            if CURR_DIR == 0:  # and CURR_ROCK == 0:
+            if data_index == 0:  # and rock_index == 0:
                 # board[8, max_y] = '<'
                 rock_diff = rock_id - last_rock
                 y_diff = max_y - last_y
                 print(f'rock# {rock_id}, last {last_rock}, diff {rock_diff};  h {max_y}, last {last_y}, diff {y_diff}')
-                # print('ct', rock_id, 'height', max_y, CURR_DIR, CURR_ROCK, 'diff', max_y - last_y)
+                # print('ct', rock_id, 'height', max_y, data_index, rock_index, 'diff', max_y - last_y)
                 last_rock = rock_id
                 last_y = max_y
                 # print(rock_diff, last_rock_diff, y_diff, last_y_diff)
@@ -180,6 +166,8 @@ def p2():
     # print_2d('.', board)
 
     return -max_y + -(((1000000000000 - last_rock) // last_rock_diff) * last_y_diff)
+
+
 # 1514285714288
 # 1589142865526 too high
 # 1589142857183
