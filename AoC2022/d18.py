@@ -1,26 +1,10 @@
 import sys
 from collections import deque
+from operator import itemgetter
 
 
 def p1():
-    dirs = [
-        (0, 0, 1),
-        (0, 1, 0),
-        (1, 0, 0),
-    ]
-
-    def get_neighbors(x, y, z, b):
-        n = 0
-        for xo, yo, zo in dirs:
-            if (x + xo, y + yo, z + zo) in b:
-                n += 0
-            else:
-                # interestingly we can simply double-count positive directions, because for every
-                # double-counted face, there's exactly 1 opposite uncounted face, and it evens out
-                n += 2
-        return n
-
-    return sum(get_neighbors(*c, cubes) for c in cubes)
+    return sum(sum([0 if ((x + d[0], y + d[1], z + d[2]) in cubes) else 2 for d in [(0, 0, 1), (0, 1, 0), (1, 0, 0)]]) for x, y, z in cubes)
 
 
 def p2():
@@ -49,11 +33,9 @@ def p2():
 
     def bfs(src, b):
         acc = 0
-        step = 0
         q = deque([src])
         seen = set()
         while q:
-            step += 1
             cur = q.popleft()
 
             empty, filled = get_air(*cur, b)
@@ -65,7 +47,7 @@ def p2():
                 seen.add(n)
                 q.append(n)
         return acc
-    return bfs((-1, -1, -1), cubes)
+    return bfs((*mn,), cubes)
 
 
 day = 18
@@ -74,14 +56,10 @@ if len(sys.argv) > 1:
     f = sys.argv[1]
 
 with open(f) as file:
-    data = [[int(i) for i in line.split(',')] for line in file]
+    cubes = set(tuple(int(i) for i in line.split(',')) for line in file)
 
-    cubes = set()
-    mn, mx, = [2**32, 2**32, 2**32], [0, 0, 0]
-    for x, y, z in data:
-        mn, mx = [min(mn[0], x), min(mn[1], y), min(mn[2], z)], [max(mx[0], x), max(mx[1], y), max(mx[2], z)]
-        cubes.add((x, y, z))
-    mn, mx = [i-2 for i in mn], [i+2 for i in mx]
+    mn = [min(*cubes, key=itemgetter(i))[i] - 2 for i in range(3)]
+    mx = [max(*cubes, key=itemgetter(i))[i] + 2 for i in range(3)]
 
 print('part1:', p1())
 print('part2:', p2())
