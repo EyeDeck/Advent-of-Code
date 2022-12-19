@@ -79,6 +79,8 @@ def find_paths(inv, costs, minutes, s):
 
     # print(most_ore, most_clay, most_obsidian)
 
+    most_geodes = 0
+
     for minute in range(minutes):
         print(f'{s}: {minute+1}/{minutes}, paths: {len(paths)}', end='\r')
         new_paths = []
@@ -94,9 +96,10 @@ def find_paths(inv, costs, minutes, s):
                     # print('added', product, 'from', robot)
                     inv[product] += inv[robot]
 
-            # if inv['geode'] < most_geodes:
-            #     continue
-            # most_geodes = max(most_geodes, inv['geodes'])
+            if inv['geode'] < most_geodes:
+                # print('dropped', inv)
+                continue
+            most_geodes = max(most_geodes, inv['geode'])
 
             # print(minute, inv, options)
             # input()
@@ -146,6 +149,7 @@ def find_paths(inv, costs, minutes, s):
         #     print(path)
         paths = new_paths
         # input()
+    print(' ' * 50, end='\r')
     return max(paths, key=itemgetter('geode'))
 
 
@@ -187,5 +191,5 @@ if len(sys.argv) > 1:
 with open(f) as file:
     data = [[int(i) for i in re.findall(r'[0-9]+', line)][1:] for line in file]
 
-# print('part1:', p1())
+print('part1:', p1())
 print('part2:', p2())
