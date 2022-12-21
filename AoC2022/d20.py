@@ -27,12 +27,8 @@ def print_ll(v0, ll):
     print('\n')
 
 
-def shuffle(ll, data_len):
+def shuffle(ll, data_len, v0):
     for node in ll:
-        d = node.d
-        if d == 0:
-            continue
-
         # note that we have to pop the node from the list BEFORE getting the offset,
         # otherwise we can loop back over the starting number and throw it all off
         current_left, current_right = node.prev, node.next
@@ -40,6 +36,10 @@ def shuffle(ll, data_len):
         current_right.prev = current_left
 
         offset = get_offset(node, node.d, data_len)
+        if offset == node:
+            current_left.next = node
+            current_right.prev = node
+            continue
 
         next_left, next_right = offset, offset.next
 
@@ -49,12 +49,13 @@ def shuffle(ll, data_len):
         next_left.next = node
         next_right.prev = node
 
+        # print_ll(v0, ll)
     return ll
 
 
 def make_ll(d, m=1):
-    v0 = None
     ll = [Node(None, d[0] * m)]
+    v0 = ll[-1] if ll[-1].d == 0 else None
     for line in d[1:]:
         next_node = Node(ll[-1], line * m, None)
         ll[-1].next = next_node
@@ -68,8 +69,9 @@ def make_ll(d, m=1):
 
 def solve(data, shuffles, mult):
     v0, ll = make_ll(data, mult)
+    # print_ll(v0, ll)
     for i in range(shuffles):
-        shuffle(ll, len(data) - 1)
+        shuffle(ll, len(data) - 1, v0)
     acc = 0
     for i in range(3):
         v0 = get_offset(v0, 1000, len(data))
@@ -86,4 +88,4 @@ with open(f) as file:
     data = [int(line) for line in file]
 
 print('part1:', solve(data, 1, 1))
-print('part1:', solve(data, 10, 811589153))
+print('part2:', solve(data, 10, 811589153))
