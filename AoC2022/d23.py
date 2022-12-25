@@ -94,7 +94,7 @@ def solve(p2=False, offsets=None):
     return area - len(board)
 
 
-day = 0
+day = 23
 f = f'd{day}.txt'
 if len(sys.argv) > 1:
     f = sys.argv[1]
