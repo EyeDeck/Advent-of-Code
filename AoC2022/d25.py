@@ -8,6 +8,14 @@ decode_map = {
     '=': -2,
 }
 
+
+def decode(s):
+    n = 0
+    for i, c in enumerate(reversed(s)):
+        n += decode_map[c] * (5 ** i)
+    return n
+
+
 encode_map = {
     0: ('0', 0),
     1: ('1', -1),
@@ -17,27 +25,23 @@ encode_map = {
 }
 
 
+def encode(n):
+    snafu = []
+    while n > 0:
+        d = (n % 5)
+        a, acc_mod = encode_map[d]
+        n += acc_mod
+        snafu.append(a)
+        n //= 5
+    return ''.join(reversed(snafu))
+
+
 def p1():
     acc = 0
     for line in data:
-        n = 0
-        for i, c in enumerate(reversed(line)):
-            n += decode_map[c] * (5 ** i)
-        acc += n
-
-    snafu = []
-    while acc > 0:
-        d = (acc % 5)
-        # print(acc, snafu, d)
-
-        a, acc_mod = encode_map[d]
-
-        acc += acc_mod
-        snafu.append(a)
-
-        acc //= 5
-
-    return ''.join(reversed(snafu))
+        acc += decode(line)
+    print(acc)
+    return encode(acc)
 
 
 day = 25
