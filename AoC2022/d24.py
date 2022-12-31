@@ -47,7 +47,24 @@ def get_neighbors(c, b, walls):
     return neighbors
 
 
-def traverse_maze(blizz, start, end):
+def traverse_maze(blizz, start, end, frame_o=0):
+    def render():
+        print('rendering frame', minute + frame_o, end='\r')
+        img_size = bounds[2] + 1, bounds[3] + 1
+        img = Image.new('RGB', img_size, BG_COLOR)
+        for c in walls:
+            if c == start_wall or c == end_wall:
+                continue
+            img.putpixel(c, WALL_COLOR)
+        for c, b in blizz.items():
+            img.putpixel(c, BLIZZARD_COLORS[len(b)-1])
+        for c in positions:
+            img.putpixel(c, ELF_COLOR)
+
+        # img.show()
+        scaled_img = img.resize((img_size[0] * 8, img_size[1] * 8), 0)
+        scaled_img.save(f'{PATH}\\{str(minute + frame_o).zfill(5)}.png')
+
     positions = {start}
 
     # print('Initial state:')
@@ -65,12 +82,15 @@ def traverse_maze(blizz, start, end):
 
         positions = {p for p in positions if p not in blizz}
 
-        # print(f'Minute {minute}')
+        # print(f'Minute {minute}, ({len(positions)})', end='\r')
         # print_2d(
         #     '. ', {(x, y): (b[0] if len(b) == 1 else len(b)) for (x, y), b in blizz.items()},
-        #     {(x, y): '#' for x, y in walls},
+        #     # {(x, y): '#' for x, y in walls},
         #     {c: '@' for c in positions}
         # )
+
+        if RENDER:
+            render()
 
         while positions:
             cur = positions.pop()
@@ -98,7 +118,7 @@ def p2():
     b = blizzards
     minutes = 0
     for s, e in tgts:
-        m, b = traverse_maze(tick(b), s, e)
+        m, b = traverse_maze(tick(b), s, e, minutes)
         minutes += m
     return minutes
 
@@ -126,8 +146,24 @@ start, end = min(empty, key=itemgetter(1)), max(empty, key=itemgetter(1))
 bounds = min(walls, key=itemgetter(0))[0], min(walls, key=itemgetter(1))[1], \
          max(walls, key=itemgetter(0))[0], max(walls, key=itemgetter(1))[1]
 
-walls.add((start[0], start[1] - 1))
-walls.add((end[0], end[1] + 1))
+start_wall, end_wall = (start[0], start[1] - 1), (end[0], end[1] + 1)
+walls.update([start_wall, end_wall])
 
-print('part1:', p1())
-print('part2:', p2())
+RENDER = '-r' in sys.argv or '--render' in sys.argv
+if RENDER:
+    import os
+    from PIL import ImageColor, Image
+
+    PATH = 'media\\d24'
+    if not os.path.exists(PATH):
+        os.makedirs(PATH)
+
+    BG_COLOR = ImageColor.getcolor('#D6FFFF', 'RGB')
+    ELF_COLOR = ImageColor.getcolor('#41D800', 'RGB')
+    WALL_COLOR = ImageColor.getcolor('#00F6FF', 'RGB')
+    BLIZZARD_COLORS = [ImageColor.getcolor(i, 'RGB') for i in ['#00FFFF', '#4CFF00', '#FFD800', '#FF6A00']]
+
+    print('part2:', p2())
+else:
+    print('part1:', p1())
+    print('part2:', p2())
