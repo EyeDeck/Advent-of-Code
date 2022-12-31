@@ -2,7 +2,7 @@
 # I've since edited it it a fair bit, but credit still goes to that good lad
 
 import string
-from collections import deque
+from collections import deque, defaultdict
 import heapq
 from functools import lru_cache
 import re
@@ -88,11 +88,12 @@ def rotate_point_around_origin(x, y, origin_x, origin_y, angle, clockwise=True):
 def setday(n):
     global _PROBLEM
     assert isinstance(n, int), 'day must be int, not %s' % (type(n),)
+    assert n > 0, 'you forgot to set the day again!'
     assert _PROBLEM is None, 'setproblem() multiple times'
     _PROBLEM = n
 
 
-def open_default():
+class open_default(object):
     def __init__(self):
         if len(sys.argv) > 1:
             self.fn = sys.argv[1]
@@ -117,23 +118,31 @@ def parselines(func=None):
 
 def parsegrid(ignore=None):
     grid = {}
-    if ignore is not None:
-        for y, line in enumerate(parselines()):
-            for x, c in enumerate(line):
-                if c not in ignore:
-                    grid[x, y] = c
-    else:
-        for y, line in enumerate(parselines()):
-            for x, c in enumerate(line):
+    inverse = defaultdict(list)
+    unique = {}
+    non_unique = set()
+
+    for y, line in enumerate(parselines()):
+        for x, c in enumerate(line):
+            if ignore is None or c not in ignore:
                 grid[x, y] = c
+
+                inverse[c].append((x, y))
+
+                if c in unique:
+                    del unique[c]
+                    non_unique.add(c)
+                elif c not in non_unique:
+                    unique[c] = (x, y)
+
+    return grid, inverse, unique
 
 
 def get_ints(s):
     return [int(i) for i in re.findall(r'-?[0-9]+', s)]
 
 
-DEFAULT_SCRUB = '[^a-zA-Z0-9]'
-def do_scrub(scrub, s):
+def do_scrub(s, scrub='[^a-zA-Z0-9]'):
     """Remove characters designated by `scrub` from `s`."""
     # If it starts with '[' then it's probably a regex character class.
     # Otherwise, assume it's a normal list of characters.

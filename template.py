@@ -36,7 +36,7 @@ setday(0)
 
 data = parselines()
 # data = parselines(get_ints)
-# data = parsegrid()
+# grid, inverse, unique = parsegrid()
 
 print('part1:', p1() )
 print('part2:', p2() )
