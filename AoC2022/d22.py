@@ -2,10 +2,6 @@ from collections import *
 
 from aoc import *
 
-
-# print_2d(padding, *dicts, constrain=(-256, -256, 256, 256)):
-# print_2d_repl(padding, *dicts, constrain=(-256, -256, 256, 256)):
-
 DIRS = [
     (1, 0),  # r
     (0, 1),  # d
@@ -13,7 +9,7 @@ DIRS = [
     (0, -1),  # u
 ]
 DIRS_C = ['>', 'v', '<', '^']
-DIRS_R = {'>':0, 'v':1, '<':2, '^':3}
+DIRS_R = {'>': 0, 'v': 1, '<': 2, '^': 3}
 
 turn_map = {
     'R': 1,
@@ -30,28 +26,28 @@ def p1():
             break
         cur = vadd(cur, (1, 0))
     for d in dirs:
-        print(d)
+        # print(d)
         if isinstance(d, int):
             path[cur] = DIRS_C[heading]
             for i in range(d):
                 nx = vadd(cur, DIRS[heading])
                 if nx not in board:
-                    print(nx, 'not in board')
+                    # print(nx, 'not in board')
                     nx = vsub(nx, DIRS[heading])
 
                     while nx in board:
                         nx = vsub(nx, DIRS[heading])
-                        print('back', nx)
+                        # print('back', nx)
 
                     nx = vadd(nx, DIRS[heading])
 
                 if board[nx] == '#':
-                    print('hit a wall')
+                    # print('hit a wall')
                     break
 
                 path[nx] = DIRS_C[heading]
 
-                print(cur)
+                # print(cur)
                 cur = nx
 
             # p_size = 20
@@ -63,36 +59,14 @@ def p1():
             heading += 1 if d == 'R' else -1
             heading %= 4
 
-            print('heading=', heading, '(', DIRS_C[heading], ')')
+            # print('heading=', heading, '(', DIRS_C[heading], ')')
 
-    print_2d(' ', board, path, {cur: '@'})
+    # print_2d(' ', board, path, {cur: '@'})
 
     col = cur[0] + 1
     row = cur[1] + 1
-    print(col, row, DIRS_C[heading])
+    # print(col, row, DIRS_C[heading])
     return row * 1000 + col * 4 + heading
-
-
-# def get_chunk(board, seen, cur, s):
-#     face = {}
-#     x, y = cur
-#     for x_o in range(x, x + s):
-#         for y_o in range(y, y + s):
-#             face[x_o-x, y_o-y] = board[x_o, y_o]
-#
-#     for d, off in enumerate(DIRS):
-#         print('cur, d, off', cur, d, off, vmul(DIRS[d], (s, s)))
-#         face_c = vadd(cur, vmul(DIRS[d], (s, s)))
-#         if face_c not in board:
-#             continue
-#
-#         if (cur, face_c) in seen:
-#             continue
-#
-#         seen.add((cur, face_c))
-#         print(face_c, board[face_c], DIRS_C[d])
-#         face[d] = get_chunk(board, seen, face_c, s)
-#     return face
 
 
 def get_chunk(board, seen, cur, s):
@@ -112,7 +86,7 @@ def get_chunk(board, seen, cur, s):
         i += 1
 
         for d, off in enumerate(DIRS):
-            print('cur, d, off', cur, d, off, vmul(DIRS[d], (s, s)))
+            # print('cur, d, off', cur, d, off, vmul(DIRS[d], (s, s)))
             face_c = vadd(cur, vmul(DIRS[d], (s, s)))
 
             if face_c not in board:
@@ -125,7 +99,7 @@ def get_chunk(board, seen, cur, s):
 
             stack.append((i, d, face_c))
 
-        print(stack)
+        # print(stack)
     return face
 
 
@@ -162,71 +136,6 @@ warp_map = {
     (6, 'v'): (2, 'v', False, True, False),
 }
 
-# warp_map = {
-#     (1, '<'): lambda x, y: (5, '>', -x, -y),
-#     (1, '<'): (5, '>', -1),
-#     (1, '^'): (6, '>', 1),
-#     # (1, '>'): (2, '>'),
-#     # (1, 'v'): (3, 'v'),
-#
-#     # (2, '<'): (1, '<'),
-#     (2, '^'): (6, '^', 1),
-#     (2, '>'): (4, '<', -1),
-#     (2, 'v'): (3, '<', 1),
-#
-#     (3, '<'): (5, 'v', 1),
-#     # (3, '^'): (1, '^'),
-#     (3, '>'): (2, '^', 1),
-#     # (3, 'v'): (4, 'v'),
-#
-#     # (4, '<'): (5, '<'),
-#     # (4, '^'): (3, '^'),
-#     (4, '>'): (2, '<', -1),
-#     (4, 'v'): (6, '<', 1),
-#
-#     (5, '<'): (1, '>', -1),
-#     (5, '^'): (3, '>', 1),
-#     # (5, '>'): (4, '>'),
-#     # (5, 'v'): (6, 'v'),
-#
-#     (6, '<'): (1, 'v', 1),
-#     # (6, '^'): (5, '^'),
-#     (6, '>'): (4, '^', 1),
-#     (6, 'v'): (2, 'v', 1),
-# }
-
-
-# def p2():
-#     face_size = 4
-#
-#     cur = (0, 0)
-#     heading = 0
-#     path = {}
-#     while True:
-#         if cur in board:
-#             break
-#         cur = vadd(cur, (1, 0))
-#     top_l = cur
-#     # front, right, back, left, up, down
-#     face_map = {}
-#
-#     seen = set()
-#     cube_map = get_chunk(board, seen, cur, face_size)
-#
-#     # print(cube_map)
-#     for k, v in cube_map.items():
-#         print(k, v)
-#         print_2d(' ', v)
-#
-#     # for y in range(cur[1], face_size):
-#     #     for x in range(cur[0], face_size):
-#     #         faces[0][x,y] = board[x,y]
-#     #         del board[x,y]
-#     # faces[0] =
-#     # print_2d(' ', faces[0])
-#
-#     return None
-
 
 def get_warp(c, h):
     # print('warping', c, h)
@@ -237,7 +146,7 @@ def get_warp(c, h):
     # print(next_key)
     # print('face_bounds[curr_face][0]', face_bounds[curr_face][0],'face_bounds[curr_face][1]', face_bounds[curr_face][1])
 
-    norm_x, norm_y = c[0] - face_bounds[curr_face-1][0], c[1] - face_bounds[curr_face-1][1]
+    norm_x, norm_y = c[0] - face_bounds[curr_face - 1][0], c[1] - face_bounds[curr_face - 1][1]
     # print('norm_x, norm_y', norm_x, norm_y)
 
     next_face, next_dir, flip_x, flip_y, swap_axes = warp_map[next_key]
@@ -248,7 +157,7 @@ def get_warp(c, h):
         next_x, next_y = norm_x, norm_y
 
     # print('next_face, next_dir, next_x, next_y', next_face, next_dir, flip_x, flip_y)
-    next_x_min, next_y_min, next_x_max, next_y_max = face_bounds[next_face-1]
+    next_x_min, next_y_min, next_x_max, next_y_max = face_bounds[next_face - 1]
 
     if not flip_x:
         next_x = next_x_min + next_x
@@ -262,40 +171,7 @@ def get_warp(c, h):
 
     next_coord = (next_x, next_y)
 
-    # if next_dir == '>':
-    #     if flipped:
-    #         next_coord = next_x_min + norm_x, next_y_max - norm_y
-    #         print('aaaaa')
-    #     else:
-    #         next_coord = next_x_min + norm_x, next_y_min + norm_y
-    # elif next_dir == 'v':
-    #     if flipped:
-    #         next_coord = next_x_min + norm_y, next_x_max - norm_x
-    #     else:
-    #         next_coord = next_x_min + norm_y, next_x_min + norm_x
-    # elif next_dir == '<':
-    #     if flipped:
-    #         next_coord = next_x_min + norm_x, next_y_max - norm_y
-    #     else:
-    #         next_coord = next_x_min + norm_x, next_y_min + norm_y
-    # elif next_dir == '^':
-    #     if flipped:
-    #         next_coord = next_x_min + norm_y, next_x_max - norm_x
-    #     else:
-    #         next_coord = next_x_min + norm_y, next_x_min + norm_x
-
-    # if next_dir in '<>':
-    #     if flipped:
-    #         next_coord = next_x_min + norm_x, next_y_max - norm_y  # correct ?
-    #     else:
-    #         next_coord = next_x_min + norm_x, next_y_min + norm_y
-    # elif next_dir in '^v':
-    #     if flipped:
-    #         next_coord = next_x_max - norm_x, next_x_min + norm_y
-    #     else:
-    #         next_coord = next_x_min + norm_x, next_x_min + norm_y
-
-    print('goto', next_coord, next_dir)
+    # print('goto', next_coord, next_dir)
     return next_coord, DIRS_R[next_dir]
 
 
@@ -310,7 +186,7 @@ def p2():
     # for d in dirs:
     while dirs:
         d = dirs.pop(0)
-        print(f'current pos {cur}, heading {DIRS_C[heading]}, next input:', d)
+        # print(f'current pos {cur}, heading {DIRS_C[heading]}, next input:', d)
         if isinstance(d, int):
             path[cur] = DIRS_C[heading]
             for i in range(d):
@@ -320,14 +196,14 @@ def p2():
                     nx, nx_h = get_warp(cur, heading)
 
                 if board[nx] == '#':
-                    print('hit a wall')
+                    # print('hit a wall')
                     break
 
                 heading = nx_h
 
                 path[nx] = DIRS_C[heading]
 
-                print(cur)
+                # print(cur)
                 cur = nx
 
             # p_size = 20
@@ -339,24 +215,22 @@ def p2():
             heading += 1 if d in 'Rr' else -1
             heading %= 4
 
-            print('heading=', heading, '(', DIRS_C[heading], ')')
-        else:
-            pass
-            # print('invalid input')
+            # print('heading=', heading, '(', DIRS_C[heading], ')')
+        # else:
+        #     print('invalid input')
 
-        if not dirs:
-            print_2d('  ', board, path, {cur: '@'})
+        # if not dirs:
+        #     print_2d('  ', board, path, {cur: '@'})
+        #
+        #     dirs.extend(int(i) if i.isnumeric() else i for i in input('moves: ').split())
 
-            dirs.extend(int(i) if i.isnumeric() else i for i in input('moves: ').split())
-
-    print_2d(' ', board, path, {cur: '@'})
+    # print_2d(' ', board, path, {cur: '@'})
 
     col = cur[0] + 1
     row = cur[1] + 1
-    print(col, row, DIRS_C[heading])
+    # print(col, row, DIRS_C[heading])
     return row * 1000 + col * 4 + heading
 
-# 95275 too low
 
 day = 22
 f = f'd{day}.txt'
@@ -373,6 +247,26 @@ for y, line in enumerate(map_raw.splitlines()):
             continue
         board[x, y] = c
 
+# to save time I just hand-edited the input to have an extra chunk in it formatted like
+#         11112222
+#         11112222
+#         11112222
+#         11112222
+#         3333
+#         3333
+#         3333
+#         3333
+#     55554444
+#     55554444
+#     55554444
+#     55554444
+#     6666
+#     6666
+#     6666
+#     6666
+# (completely arbitrarily numbered based off what I had initially scribbled on a paper cube)
+# but scaled up to 50x50 per side or whatever, because manually numbering the faces
+# in a text editor took all of 2 minutes, while writing a smarter parser would have taken much longer
 faces = {}
 face_whatever = [set() for _ in range(6)]
 for y, line in enumerate(face_raw.splitlines()):
@@ -381,17 +275,18 @@ for y, line in enumerate(face_raw.splitlines()):
             continue
         faces[x, y] = c
         # print(c)
-        face_whatever[int(c)-1].add((x,y))
+        face_whatever[int(c) - 1].add((x, y))
 
 # print(face_whatever)
 
-face_bounds = [(min(s, key=itemgetter(0))[0], min(s, key=itemgetter(1))[1], max(s, key=itemgetter(0))[0], max(s, key=itemgetter(1))[1], ) for s in face_whatever]
-print(face_bounds)
+face_bounds = [(min(s, key=itemgetter(0))[0], min(s, key=itemgetter(1))[1], max(s, key=itemgetter(0))[0],
+                max(s, key=itemgetter(1))[1],) for s in face_whatever]
+# print(face_bounds)
 
 dirs = [int(i) if i.isnumeric() else i for i in dir_raw.replace('R', ' R ').replace('L', ' L ').split(' ')]
 
-print_2d(' ', board)
+# print_2d(' ', board)
 # print(dirs)
 
-# print('part1:', p1() )
+print('part1:', p1())
 print('part2:', p2())

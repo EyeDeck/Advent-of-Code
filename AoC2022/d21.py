@@ -58,8 +58,33 @@ with open(f) as file:
         name = parts[0][:-1]
         if len(parts) == 2:
             data[name] = int(parts[1])
+            # data[name] = parts[1]
         else:
             data[name] = [parts[1], operators[parts[2]], parts[3]]
+            # data[name] = ''.join(parts[1:])
+
+if False:
+    def make_eq():
+        data['root'] = data['root'].replace('+', '=')
+        last = data['root']
+        data['humn'] = 'x'
+        while True:
+            n = last
+            for k, v in data.items():
+                n = n.replace(k, f'({v})' if not v.isnumeric() else v)
+            if n == last:
+                break
+            last = n
+        # last = last.replace('/', '//')
+        # print(eval(last))
+        # print(last)
+        return last
+
+    import sympy
+    x = sympy.Symbol('(x)')
+    as_str = make_eq()
+    print(as_str)
+    print(sympy.solve(as_str, x))
 
 print('part1:', solve(copy.deepcopy(data)))
 print('part2:', p2())

@@ -99,7 +99,7 @@ def p2(board):
 day = 14
 
 parser = argparse.ArgumentParser()
-parser.add_argument('file', default=f'd{day}.txt')
+parser.add_argument('file', default=f'd{day}.txt', nargs='?')
 parser.add_argument('-f-mult', default=1, type=int)
 parser.add_argument('-f-scale', default=4, type=int)
 parser.add_argument('-r', '--render', action='store_true')
