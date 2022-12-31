@@ -21,7 +21,7 @@ def solve(grid, all_keys, all_doors, start):
 
         return neighbors
 
-    q = {(start, start, frozenset()): 0}
+    q = {(start, frozenset()): 0}
     best = {}
 
     while True:
@@ -32,30 +32,19 @@ def solve(grid, all_keys, all_doors, start):
 
         while q:
             first = next(iter(q))
-            pos, last, keys = first
+            pos, keys = first
             steps = q.pop(first)
 
             for coord, tile in get_neighbors(grid, pos, keys).items():
-                if coord == last:
-                    continue
+                next_keys = frozenset(keys | {tile}) if tile in all_keys else keys
+                next_steps = steps + 1
+                next_key = (coord, next_keys)
 
-                if tile in all_keys:
-                    next_keys = frozenset(keys | {tile})
-                    last_coord = coord
-                else:
-                    next_keys = keys
-                    last_coord = pos
+                if next_key in best and best[next_key] <= next_steps:
+                    continue
 
                 if next_keys == all_keys:
-                    return steps + 1
-
-                next_key = (coord, last_coord, next_keys)
-                next_steps = steps + 1
-                if next_key in best and best[next_key] < next_steps:
-                    continue
-
-                if next_key in next_q and next_q[next_key] < next_steps:
-                    continue
+                    return next_steps
 
                 next_q[next_key] = next_steps
                 best[next_key] = next_steps
