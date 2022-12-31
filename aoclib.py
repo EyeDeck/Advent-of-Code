@@ -61,6 +61,11 @@ def print_2d_repl(padding, *dicts, constrain=(-256, -256, 256, 256)):
         print()
 
 
+def grid_bounds(d):
+    return min(d, key=itemgetter(0))[0], min(d, key=itemgetter(1))[1], \
+           max(d, key=itemgetter(0))[0], max(d, key=itemgetter(1))[1]
+
+
 def rotate_point_around_origin(x, y, origin_x, origin_y, angle, clockwise=True):
     offset_x = x - origin_x
     offset_y = y - origin_y
