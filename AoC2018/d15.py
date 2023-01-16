@@ -1,201 +1,179 @@
-inp = open("d15.txt").readlines()
+from aoc import *
 
-import numpy as np
-import operator
-from collections import deque
 
 class Combatant:
-	def __init__(self, type, dam, hp):
-		self.type = type
-		self.dam = dam
-		self.hp = hp
+    def __init__(self, type, hp, dmg, pos):
+        self.type = type
+        self.hp = hp
+        self.dmg = dmg
+        self.pos = pos
 
-def parseboard(inp,stats):
-	combatants = {}
-	board = np.array([c for c in [list(l.rstrip("\n")) for l in inp]])
-	board = np.rot90(np.flipud(board),3) # so I can access it as [x][y] and don't need to remember stupid coord systems
-	# print("Printing",board)
-	
-	for x in range(len(board)):
-		for y in range(len(board[x])):
-			c = board[x][y]
-			if c in stats:
-				combatants[x,y] = Combatant(c, stats[c][0], stats[c][1])
-				board[x][y] = "."
-	
-	return board, combatants
+    def __str__(self):
+        return f'{self.type}  HP:{self.hp} dmg:{self.dmg} @ {self.pos}'
 
-def step(board,combatants,p2=False):
-	for cs, co in sorted(sorted(combatants.items()), key=lambda y: y[0][1]):
-		if co not in combatants.values():
-			continue
-		
-		#print("Attacker:", co.type, "at", cs)
-		
-		attacked = False
-		for o in ro:
-			this = getsq(board,combatants,tuple(map(operator.add, cs, o)),True)
-			if isinstance(this, Combatant) and this.type != co.type:
-				if attack(board,combatants,cs,co) and p2:
-					return(True, False)
-				attacked = True
-				break
-		if attacked:
-			continue
-		
-		targets={(k,v) for k,v in combatants.items() if v.type != co.type}
-		if len(targets) == 0:
-			return(True, True) # combat ended
-		
-		inrange = set()
-		# print([[t[0],t[1].type] for t in targets])
-		for t in targets:
-			for o in ro:
-				this = tuple(map(operator.add, t[0], o))
-				if getsq(board,combatants,this) == ".":
-					inrange.add(this)
-		#print("Valid target coords:")
-		#print(render(board,combatants,makeoverlay(inrange,"?")))
-		
-		path = bfs(board, combatants, cs, inrange)
-		
-		if path:
-			#print("Found target:")
-			#print(render(board,combatants,{cs:"A",path[-1]:"+", **{x:"*" for x in path[1:-1]}}))
-			combatants[path[1]] = combatants.pop(cs)
-			
-			if attack(board,combatants,path[1],co) and p2:
-				return(True, False)
-	
-	return(False,False)
+    def hit(self, dmg):
+        self.hp -= dmg
+        return self.hp > 0
 
-def attack(board,combatants,cs,co):
-	#targets = [t for t in [getsq(board,combatants,tuple(map(operator.add, cs, o)),True) for o in ro] if isinstance(t, Combatant) and t.type != co.type]
-	targets = []
-	for o in ro:
-		this = tuple(map(operator.add, cs, o))
-		tile = getsq(board,combatants,this,True)
-		if isinstance(tile, Combatant) and tile.type != co.type:
-			targets.append((this, tile))
-	if not targets:
-		return(False)
-	else:
-		lowest = 0x7fffffff
-		target = None
-		for t in targets:
-			if t[1].hp < lowest:
-				lowest = t[1].hp
-				target = t
-		target[1].hp -= co.dam
-		#print(co.type, "at", cs, "hits", target[1].type, "at", target[0], "for", co.dam, "damage—", target[1].hp, "hp remains.")
-		if target[1].hp <= 0:
-			#print(target[1].type, "at", target[0], "dies!")
-			del combatants[target[0]]
-			if (target[1].type == "E"):
-				return(True)
-	return(False)
-	#print(cs,targets)
-	#input()
 
-def bfs(board,combatants,start,goals):
-	visited = {start}
-	current = deque([[start]])
-	paths = []
-	while current:
-		path = current.popleft()
-		x,y = path[-1]
-		if paths and len(path) > len(paths[0]):
-			break
-		if (x,y) in goals:
-			paths.append(path)
-		for o in ro:
-			this = tuple(map(operator.add, path[-1], o))
-			if getsq(board,combatants,this) == ".":
-				if this not in visited:
-					current.append(path + [this])
-					visited.add(this)
-		#print(render(board,combatants,{**makeoverlay(visited,"-"), **makeoverlay(path,"~")}))
-		#input()
-	if paths:
-		# have fun untangling this shit future me, you asshole
-		dest = sorted(paths, key=lambda y: y[-1][1])[0][-1]
-		return(sorted([i for i in paths if i[-1] == dest], key=lambda x: x[1][-1])[0])
-	else:
-		return None
+def get_neighbors(pos, cbt, grid):
+    neighbors = {}
+    for dir in READING_ORDER:
+        n = vadd(pos, dir)
+        tile = get_tile(n, cbt, grid)
+        if tile == '#':
+            continue
+        neighbors[n] = tile
+    return neighbors
 
-def getsq(board,combatants,coords,obj=False):
-	x,y = coords
-	if (x,y) in combatants:
-		if obj:
-			return combatants[x,y]
-		else:
-			return combatants[x,y].type
-	else:
-		return board[x][y]
 
-def makeoverlay(coords, char):
-	return {c:char for c in coords}
+def get_tile(pos, cbt, grid):
+    if pos in cbt:
+        return cbt[pos]
+    else:
+        return grid[pos]
 
-def render(board,combatants,overlay={}):
-	tostr = []
-	for y in range(len(board[0])):
-		for x in range(len(board)):
-			if (x,y) in overlay:
-				tostr.append(overlay[(x,y)])
-			else:
-				tostr.append(getsq(board,combatants,(x,y)))
-			tostr.append(" ")
-		tostr.append("\n")
-	return "".join(tostr)
 
-def runinput(inp, p2=False, prints=False):
-	if p2:
-		for i in range(3, 0xfff):
-			stats = {"G":(3,200), "E":(i,200)}
-			board, combatants = parseboard(inp, stats)
-			ans = 0
-			
-			for j in range(0xfff):
-				if prints:
-					print("Round", j, "ends.", "\n"+render(board,combatants))
-				outcome = step(board,combatants,True)
-				if outcome == (True, True):
-					print("Tried",i,", no elves died on round",j,"\n" + render(board,combatants) if prints else "")
-					ans = sum([v.hp for c,v in combatants.items()]) * j
-					return(ans)
-				elif outcome == (True, False):
-					if prints:
-						print("Tried",i,",elf died on round",j,"\n",render(board,combatants))
-					break
-			if prints:
-				print(render(board,combatants))
-	else:
-		stats = {"G":(3,200), "E":(3,200)}
-		board, combatants = parseboard(inp, stats)
-		ans = 0
-		
-		for i in range(0xfff):
-			if prints:
-				print("Round", i, "ends.")
-				print(render(board,combatants))
-			if step(board,combatants) == (True,True):
-				ans = sum([v.hp for c,v in combatants.items()]) * i
-				break
-		if prints:
-			print(render(board,combatants))
-		return(ans)
+def bfs(src, cbt, grid):
+    q = deque([src])
+    start_type = get_tile(src, cbt, grid).type
 
-ro = [(0,-1),(-1,0),(1,0),(0,1)] # reading order
+    parent = {}
 
-#tests = [("d15-e5.txt", 36334), ("d15-e6.txt", 39514), ("d15-e7.txt", 27755), ("d15-e8.txt", 28944), ("d15-e9.txt", 18740), ("d15-e10.txt", 183300), ("d15-e11.txt", 207542)]
+    while q:
+        cur = q.popleft()
+        c = get_tile(cur, cbt, grid)
+        if isinstance(c, Combatant):
+            if c.type != start_type:
+                break
+            elif cur != src:
+                continue
 
-#for t in tests:
-#	ans = runinput(open(t[0]).readlines())
-#	if ans == t[1]:
-#		print(t[0], "passed.")
-#	else:
-#		print(t[0], "failed—got", str(ans) + ", expected:" , t[1])
+        for n in get_neighbors(cur, cbt, grid):
+            if n in parent:
+                continue
 
-print("P1:", runinput(inp, False))
-print("P2:", runinput(inp, True))
+            parent[n] = cur
+            q.append(n)
+    else:
+        return None
 
+    target_candidates = [c for c in parent if c in cbt and c != src and cbt[c].type != start_type]
+
+    paths_dict = {}
+    paths = []
+    i = 0
+    for tgt in target_candidates:
+        i += 1
+        pos = tgt
+        path = []
+        while pos != src:
+            path.append(pos)
+            pos = parent[pos]
+        path.append(src)
+        path.reverse()
+
+        paths_dict.update({k:chr(96+i) for k in path})
+        paths.append(path)
+
+    # print(paths)
+    paths = [path for path in paths if len(path) == len(min(paths, key=len))]
+
+    # rev = {(0, -1): 'v', (-1, 0): '>', (1, 0):  '<', (0, 1):  '^'}
+    # print_2d('  ', grid, {k:rev[vsub(v,k)] for k,v in parent.items()}, {src:start_type}, {k:'?' for k in target_candidates})
+    # print_2d('  ', grid, paths_dict, {src:start_type}, {k:'?' for k in target_candidates})
+
+    # print(paths)
+    return sorted(paths, key=lambda x:(x[-1][1], x[-1][0]))[0]
+
+
+def tick(cbts, board, p2=False):
+    combatants = sorted_dict(cbts, key=lambda x: (x[1], x[0]))
+    turn_order = [*combatants]
+
+    for pos in turn_order:
+        if pos not in combatants:
+            continue
+
+        combatant = combatants[pos]
+
+        # print(f'ticking {combatant}')
+
+        neighbors = get_neighbors(pos, combatants, board)
+        neighbors = {k: v for k, v in neighbors.items() if isinstance(v, Combatant) and combatant.type != v.type}
+        if not neighbors:
+            # print('moving')
+            path = bfs(pos, combatants, board)
+            if path is None:
+                continue
+
+            # print(path)
+            # print_2d('  ', board, {k: '~' for k in path}, combatants)
+            next_tile = path[1]
+            combatant.pos = next_tile
+            combatants[next_tile] = combatant
+            del combatants[pos]
+
+            neighbors = get_neighbors(next_tile, combatants, board)
+            neighbors = {k: v for k, v in neighbors.items() if isinstance(v, Combatant) and combatant.type != v.type}
+
+        if neighbors:  # attacking
+            neighbors = sorted([combatants[c] for c in neighbors], key=lambda x: x.hp)
+            target = neighbors[0]
+            # print('attacking', target)
+
+            alive = target.hit(combatant.dmg)
+            if not alive:
+                del combatants[target.pos]
+
+                if p2 and target.type == 'E':
+                    return None, False, False
+                elif len(set(c.type for c in combatants.values())) == 1:
+                    return combatants, pos == turn_order[-1], True
+
+    return combatants, True, True
+
+
+def solve(elf_dmg=3, p2=False):
+    board = {pos: (c if c in '.#' else '.') for pos, c in grid.items()}
+    combatants = {c: Combatant('G', 200, 3, c) for c in inverse['G']} | \
+                 {c: Combatant('E', 200, elf_dmg, c) for c in inverse['E']}
+    # print_2d('  ', {k: i for i, (k, v) in enumerate(combatants.items())})
+    # print('Initially:')
+    # print_2d('. ', board, combatants)
+    # print()
+
+    i = 0
+    while True:
+        combatants, last, valid = tick(combatants, board, p2)
+        if not valid:
+            return None
+
+        # print(f'After {i} round{"s" if i > 1 else ""}:')
+        # print_2d('. ', board, combatants)
+        # print([str(c) for c in combatants.values()], '\n')
+        # input((set(c.type for c in combatants.values())))
+
+        if len(set(c.type for c in combatants.values())) == 1:
+            return (i + (1 if last else 0)) * sum(c.hp for c in combatants.values())
+
+        i += 1
+
+
+def p2():
+    i = 3
+    while True:
+        i += 1
+        result = solve(i, True)
+        if result:
+            return result
+
+
+setday(15)
+
+READING_ORDER = [(0, -1), (-1, 0), (1, 0), (0, 1)]
+
+grid, inverse, unique = parsegrid()
+
+print('part1:', solve())
+print('part2:', p2())

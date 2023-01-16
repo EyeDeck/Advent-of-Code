@@ -308,6 +308,14 @@ def splat(f):
     return g
 
 
+def sorted_dict(d, key=None):
+    return {k: d[k] for k in sorted(d, key=key)}
+
+
+def sorted_vals(d):
+    return sorted_dict(d, key=d.get)
+
+
 # starting from north, running ccw
 HEXDIRS = [
     (0, 1, -1),
