@@ -8,11 +8,7 @@ def solve():
     acc_2 = 0
     for line in data:
         history = [line]
-        while True:
-            hs = set(history[-1])
-            if len(hs) == 1 and hs.pop() == 0:
-                break
-
+        while len(set(history[-1])) > 1 or history[-1][0] != 0 :
             last = history[-1]
             new = []
             for i in range(len(last)-1):
