@@ -1,67 +1,48 @@
+import copy
+
 from aoc import *
 
-def p1():
-    width = max(grid.keys(), key=itemgetter(0))[0]
-    height = max(grid.keys(), key=itemgetter(1))[1]
+def rock(grid, width, height):
     for n in range(height):
-        for x in range(width+1):
-            for y in range(1,height+1):
-                if grid[x,y] == 'O' and grid[x,y-1] == '.':
-                    grid[x,y] = '.'
-                    grid[x,y-1] = 'O'
+        for x in range(width + 1):
+            for y in range(1, height + 1):
+                if grid[x, y] == 'O' and grid[x, y - 1] == '.':
+                    grid[x, y] = '.'
+                    grid[x, y - 1] = 'O'
+    return grid
+
+def p1():
+    g = copy.deepcopy(grid)
+
+    _, _, width, height = grid_bounds(grid)
+    g = rock(g, width, height)
+
     acc = 0
-    for k,v in grid.items():
+    for k,v in g.items():
         if v == 'O':
             acc += height-k[1]+1
-    print_2d(' ', grid)
+
+    print_2d(' ', g)
     return acc
+
+def spin(grid, width, height):
+    for _ in range(4):
+        grid = rock(grid, width, height)
+        grid = rotate_2d(grid, 90, True, width, height)
+    return grid
 
 
 def p2():
-    width = max(grid.keys(), key=itemgetter(0))[0]
-    height = max(grid.keys(), key=itemgetter(1))[1]
-    # cycles = [(0, height+1, 1,  1, width+1, 1,  0, -1),
-    #           (width-1, -1, -1,      1,0), (0,1), (-1,0)]
+    g = copy.deepcopy(grid)
 
-    def spin(grid):
-        # north
-        for n in range(height):
-            for x in range(width+1):
-                for y in range(1, height+1):
-                    if grid[x,y] == 'O' and grid[x,y-1] == '.':
-                        grid[x,y] = '.'
-                        grid[x,y-1] = 'O'
-
-        # west
-        for n in range(width):
-            for x in range(1, width+1):
-                for y in range(0, height+1):
-                    if grid[x, y] == 'O' and grid[x-1, y] == '.':
-                        grid[x, y] = '.'
-                        grid[x-1, y] = 'O'
-
-        # south
-        for n in range(height):
-            for x in range(0, width+1):
-                for y in range(height-1, -1, -1):
-                    if grid[x,y] == 'O' and grid[x,y+1] == '.':
-                        grid[x,y] = '.'
-                        grid[x,y+1] = 'O'
-
-        # east
-        for n in range(width):
-            for x in range(width-1, -1, -1):
-                for y in range(0, height+1):
-                    if grid[x, y] == 'O' and grid[x+1, y] == '.':
-                        grid[x, y] = '.'
-                        grid[x+1, y] = 'O'
+    _, _, width, height = grid_bounds(g)
 
     seen = {}
     for i in range(1000000000):
         print('\n', i)
-        spin(grid)
-        print_2d(' ', grid)
-        hashable = str(grid)
+        g = spin(g, width, height)
+        print_2d(' ', g)
+        hashable = str(g)
         if hashable in seen.keys():
             last, weight = seen[hashable]
             cycle_len = i - last
@@ -72,7 +53,7 @@ def p2():
             return ans
 
         acc = 0
-        for k, v in grid.items():
+        for k, v in g.items():
             if v == 'O':
                 acc += height - k[1] + 1
 
