@@ -90,6 +90,54 @@ def rotate_point_around_origin(x, y, origin_x, origin_y, angle, clockwise=True):
         die('unimplemented angle')
 
 
+def get_2d_dim(grid, axis, func=max):
+    """
+    typically axis=0 for width, axis=1 for height
+    pass func=min to get minimum key instead
+    """
+    return func(grid.keys(), key=itemgetter(axis))[axis]
+
+
+def rotate_2d(grid, angle, in_place = False, width=-1, height=-1):
+    """
+    grid is assumed to be non-sparse
+    +angle is clockwise
+    """
+    if width == -1:
+        width = get_2d_dim(grid, 0)
+    if height == -1:
+        height = get_2d_dim(grid, 1)
+
+    # width += 1
+    # height += 1
+
+    angle = angle % 360
+
+    if angle == 90:
+        formula = lambda x, y: (-y + width,  x         ) if in_place else (-y,  x)
+    elif angle == 180:
+        formula = lambda x, y: (-x + width, -y + height) if in_place else (-x, -y)
+    elif angle == 270:
+        formula = lambda x, y: ( y        , -x + height) if in_place else ( y, -x)
+    elif angle == 0: # return a copy for consistency
+        formula = lambda x, y: ( x        ,  y         ) if in_place else ( x,  y)
+    else:
+        die('unimplemented angle')
+
+    grid_type = type(grid)
+    if grid_type == dict:
+        new = {}
+        for (x,y), k in grid.items():
+            # print('writing', x,y, 'to', formula(x,y))
+            new[formula(x,y)] = k
+    elif grid_type == set:
+        new = set()
+        for (x,y) in grid:
+            new.add(formula(x, y))
+
+    return new
+
+
 def setday(n):
     global _PROBLEM
     assert isinstance(n, int), 'day must be int, not %s' % (type(n),)

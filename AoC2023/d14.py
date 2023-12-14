@@ -2,71 +2,67 @@ import copy
 
 from aoc import *
 
-def rock(grid, width, height):
-    for n in range(height):
-        for x in range(width + 1):
-            for y in range(1, height + 1):
-                if grid[x, y] == 'O' and grid[x, y - 1] == '.':
-                    grid[x, y] = '.'
-                    grid[x, y - 1] = 'O'
-    return grid
+def rock(r, w):
+    for x, y in sorted(r):
+        y2 = y
+        while y2 > 0 and (x,y2-1) not in r and (x,y2-1) not in w:
+            y2 -= 1
+        r.remove((x,y))
+        r.add((x,y2))
+        # print(x,y,'->',x,y2)
+    return r
 
 def p1():
-    g = copy.deepcopy(grid)
-
-    _, _, width, height = grid_bounds(grid)
-    g = rock(g, width, height)
+    r = copy.deepcopy(rocks)
+    # print_2d('.', {k:'#' for k in walls}, {k:'O' for k in r})
+    r = rock(r, walls)
 
     acc = 0
-    for k,v in g.items():
-        if v == 'O':
-            acc += height-k[1]+1
+    for k in r:
+        acc += height-k[1]+1
 
-    print_2d(' ', g)
+    # print_2d('.', {k:'#' for k in walls}, {k:'O' for k in r})
     return acc
 
-def spin(grid, width, height):
-    for _ in range(4):
-        grid = rock(grid, width, height)
-        grid = rotate_2d(grid, 90, True, width, height)
-    return grid
-
-
 def p2():
-    g = copy.deepcopy(grid)
-
-    _, _, width, height = grid_bounds(g)
+    r = copy.deepcopy(rocks)
+    w = copy.deepcopy(walls)
 
     seen = {}
     for i in range(1000000000):
-        print('\n', i)
-        g = spin(g, width, height)
-        print_2d(' ', g)
-        hashable = str(g)
+        for _ in range(4):
+            r = rock(r, w)
+            # print('\n', i, _)
+            # print_2d('.', {k: '#' for k in w}, {k: 'O' for k in r})
+            r = rotate_2d(r, 90, True, width, height)
+            w = rotate_2d(w, 90, True, width, height)
+
+        hashable = (frozenset(r), frozenset(w))
+
         if hashable in seen.keys():
             last, weight = seen[hashable]
             cycle_len = i - last
-            print('at cycle', i, 'last seen', last, 'cycle len', cycle_len)
-            print(1000000000 % cycle_len)
-            print(seen.values())
-            ans = [x for x in seen.values()][((1000000000 - last) % cycle_len) + last -1]
-            return ans
+            ans = [v for v in seen.values()][((1000000000 - last) % cycle_len) + last -1]
+            return ans[1]
 
         acc = 0
-        for k, v in g.items():
-            if v == 'O':
-                acc += height - k[1] + 1
+        for k in r:
+            acc += height - k[1] + 1
 
         seen[hashable] = (i, acc)
-    print(seen)
-
-# not 102837
-# not 102851
-# 102829!
 
 setday(14)
 
 grid, inverse, unique = parsegrid()
+_, _, width, height = grid_bounds(grid)
+walls = set()
+rocks = set()
+for k, v in grid.items():
+    if v == '#':
+        walls.add(k)
+    elif v == 'O':
+        rocks.add(k)
+
 
 print('part1:', p1() )
 print('part2:', p2() )
