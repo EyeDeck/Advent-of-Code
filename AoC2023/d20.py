@@ -2,59 +2,49 @@ import math
 from aoc import *
 
 
-def p1():
+def solve():
     modules = {}
     for line in data:
         line = line.split('->')
         kind = line[0][0]
         label = line[0][1 if kind != 'b' else 0:].strip()
         dests = tuple(c.strip() for c in line[1].strip().split(','))
-        # print(dests)
 
         modules[label] = {'state':0, 'type':kind, 'dests':dests}
-        if kind == '&':
-            modules[label]['inputs'] = {}
-        # print(kind, label, dests)
-        # print(line)
+        modules[label]['inputs'] = {}
 
-    # print(modules)
-
-    to_add = []
-    for name, module in modules.items():
+    for (name, module) in list(modules.items()):
         for output in module['dests']:
-            if output not in modules:
-                to_add.append(output)
-                continue
+            if output not in modules:  # because rx...
+                modules[output] = {'state': 0, 'type': '?', 'dests': tuple(), 'inputs': {}}
             out_module = modules[output]
-            if out_module['type'] != '&':
-                continue
             out_module['inputs'][name] = 0
 
-    for name in to_add:
-        print(name)
-        modules[name] = {'state': 0, 'type': '?', 'dests': tuple()}
-
-    print(modules)
+    seen = {}
+    if 'rx' in modules:
+        rx = modules['rx']
+        rx_in = modules[next(iter(rx['inputs']))]['inputs'].keys()
+        seen = {k:(-1, -1, -1) for k in rx_in}
 
     pulses = {0:0, 1:0}
+    p1 = '?'
 
-    for i in range(1000):
+    for i in range(1,1000000):
         stack = deque([('broadcaster', 0, 'button')])
         pulses[0] += 1
         while stack:
-            # print(stack)
             label, pulse, sender = stack.popleft()
             module = modules[label]
             dests = module['dests']
             kind = module['type']
 
-            # print(label, pulse, dests, kind)
-
             if kind == 'b':
                 for output in dests:
-                    # print(label, '-low->', output)
                     stack.append((output, 0, label))
                     pulses[0] += 1
+                    # if verbose:
+                    #     print(label, '-low->', output)
+
             elif kind == '%':  # Flip-flop
                 if pulse == 1:
                     continue
@@ -62,132 +52,42 @@ def p1():
                 to_send = 1 if module['state'] else 0
                 for output in dests:
                     pulses[to_send] += 1
-                    # print(label, '-low->' if to_send == 0 else '-high->', output)
                     stack.append((output, to_send, label))
+                    # if verbose:
+                    #     print(label, '-low->' if to_send == 0 else '-high->', output)
+
             elif kind == '&':  # Conjunction
                 module['inputs'][sender] = pulse
                 to_send = 0 if sum(module['inputs'].values()) == len(module['inputs']) else 1
                 for output in dests:
                     pulses[to_send] += 1
-                    # print(label, '-low->' if to_send == 0 else '-high->', output)
                     stack.append((output, to_send, label))
+                    # if verbose:
+                    #     print(label, '-low->' if to_send == 0 else '-high->', output)
 
-    print(pulses)
-    return math.prod(pulses.values())
+                # really awkward cycle detection code for part 2
+                if label in seen and sum(modules[label]['inputs'].values()) == 0:
+                    last = seen[label]
+                    if last[2] < 1:
+                        seen[label] = (i, last[1], last[2]+1)
+                    elif last[2] == 1:
+                        seen[label] = (i - last[0], -1, 2)
 
+                    if verbose:
+                        print(i, label, seen)
 
-def p2():
-    modules = {}
-    for line in data:
-        line = line.split('->')
-        kind = line[0][0]
-        label = line[0][1 if kind != 'b' else 0:].strip()
-        dests = tuple(c.strip() for c in line[1].strip().split(','))
-        # print(dests)
+                    if all(d[2] == 2 for d in seen.values()):
+                        return p1, math.lcm(*[d[0] for d in seen.values()])
 
-        modules[label] = {'state':0, 'type':kind, 'dests':dests}
-        if kind == '&':
-            modules[label]['inputs'] = {}
-        # print(kind, label, dests)
-        # print(line)
+        if i == 1000:
+            p1 = math.prod(pulses.values())
 
-    # print(modules)
-
-    to_add = []
-    for name, module in modules.items():
-        for output in module['dests']:
-            if output not in modules:
-                to_add.append(output)
-                continue
-            out_module = modules[output]
-            if out_module['type'] != '&':
-                continue
-            out_module['inputs'][name] = 0
-
-    for name in to_add:
-        print(name)
-        modules[name] = {'state': 0, 'type': '?', 'dests': tuple()}
-
-    print(modules)
-
-    pulses = {0:0, 1:0}
-
-    for i in range(1000000000):
-        # input()
-        # if i % 10000 == 0:
-        #     print('\r', i, end='')
-        stack = deque([('broadcaster', 0, 'button')])
-        pulses[0] += 1
-        while stack:
-            # print(stack)
-            label, pulse, sender = stack.popleft()
-            module = modules[label]
-            dests = module['dests']
-            kind = module['type']
-
-            if label == 'rx' and pulse == 0:
-                return i+1
-
-            # print(label, pulse, dests, kind)
-
-            if kind == 'b':
-                for output in dests:
-                    # print(label, '-low->', output)
-                    stack.append((output, 0, label))
-                    pulses[0] += 1
-            elif kind == '%':  # Flip-flop
-                if pulse == 1:
-                    continue
-                module['state'] = module['state'] ^ 1
-                to_send = 1 if module['state'] else 0
-                for output in dests:
-                    pulses[to_send] += 1
-                    # print(label, '-low->' if to_send == 0 else '-high->', output)
-                    stack.append((output, to_send, label))
-            elif kind == '&':  # Conjunction
-                module['inputs'][sender] = pulse
-                to_send = 0 if sum(module['inputs'].values()) == len(module['inputs']) else 1
-                for output in dests:
-                    pulses[to_send] += 1
-                    # print(label, '-low->' if to_send == 0 else '-high->', output)
-                    stack.append((output, to_send, label))
-
-                if label in {'sb', 'nd', 'ds', 'hf'}:
-                    # if sum(modules[label]['inputs'].values()) > 1 :
-                    #     print(i, modules[label]['inputs'])
-                    if sum(modules[label]['inputs'].values()) == 0:
-                        print(i, modules[label]['inputs'])
-                        # input()
-
-    print(pulses)
-    return math.prod(pulses.values())
-
-# too low: 1119935629956
-
-# 151202 {'zq': 0}
-# 151879 {'vv': 0}
-# 152762 {'nt': 0}
-# 153052 {'vn': 0}
-#
-# 155079 {'zq': 0}
-# 155676 {'vv': 0}
-# 156679 {'nt': 0}
-# 156785 {'vn': 0}
-#
-# diffs:
-# 3877
-# 3797
-# 3917
-# 3733
-#
-# LCM = 215252378794009
-# oh that worked
+    return p1, '?'
 
 setday(20)
 
 data = parselines()
-# data = parselines(get_ints)
-# grid, inverse, unique = parsegrid()
 
-print('part1:', p1() )
-print('part2:', p2() )
+verbose = '-v' in sys.argv or '--verbose' in sys.argv
+
+print('part1: %s\npart2: %s' % solve())
