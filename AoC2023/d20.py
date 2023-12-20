@@ -24,12 +24,12 @@ def solve():
     if 'rx' in modules:
         rx = modules['rx']
         rx_in = modules[next(iter(rx['inputs']))]['inputs'].keys()
-        seen = {k:(-1, -1, -1) for k in rx_in}
+        seen = {k:0 for k in rx_in}
 
     pulses = {0:0, 1:0}
     p1 = '?'
 
-    for i in range(1,1000000):
+    for i in range(1, 1000000):
         stack = deque([('broadcaster', 0, 'button')])
         pulses[0] += 1
         while stack:
@@ -65,19 +65,16 @@ def solve():
                     # if verbose:
                     #     print(label, '-low->' if to_send == 0 else '-high->', output)
 
-                # really awkward cycle detection code for part 2
+                # cycle detection code for part 2
                 if label in seen and sum(modules[label]['inputs'].values()) == 0:
-                    last = seen[label]
-                    if last[2] < 1:
-                        seen[label] = (i, last[1], last[2]+1)
-                    elif last[2] == 1:
-                        seen[label] = (i - last[0], -1, 2)
+                    if seen[label] == 0:
+                        seen[label] = i
 
                     if verbose:
                         print(i, label, seen)
 
-                    if all(d[2] == 2 for d in seen.values()):
-                        return p1, math.lcm(*[d[0] for d in seen.values()])
+                    if all(n > 0 for n in seen.values()):
+                        return p1, math.lcm(*seen.values())
 
         if i == 1000:
             p1 = math.prod(pulses.values())
