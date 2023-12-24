@@ -16,35 +16,19 @@ def intersect(a, b):
     else:
         return None
 
+
 def p1():
     hailstones = []
     for line in data:
         p, v = line.split(' @ ')
-        # px, py, pz = [int(n) for n in p.split(', ')]
-        # vx, vy, vz = [int(n) for n in v.split(', ')]
-        # print(px, py, pz, vx, vy, vz, slope)
-        # hailstones.append((px, py, pz, vx, vy, vz, slope))
         p = tuple(int(n) for n in p.split(', ')[:-1])
         v = tuple(int(n) for n in v.split(', ')[:-1])
-        hailstones.append((p,v))
-
+        hailstones.append((p, v))
 
     acc = 0
     for i, h1 in enumerate(hailstones):
-        for h2 in hailstones[i+1:]:
+        for h2 in hailstones[i + 1:]:
             # print('\nintersecting', h1, h2)
-            # a, b = h1[0], h2[0]
-            # print(vdistm(a,b), end='')
-            # for i in range(5):
-            #     a, b = vadd(a, h1[1]), vadd(b, h2[1])
-            #     print(' ', vdistm(a,b), end='')
-
-            # start_dist = vdist2(h1[0], h2[0])
-            # after_tick = vdist2(vadd(*h1), h2[0])
-            # print(start_dist, after_tick, vadd(*h1), vadd(*h2), vdist2(vadd(vadd(*h1), h1[1]), vadd(vadd(*h2), h2[1])))
-            # if start_dist < after_tick:
-            #     print('crossed in past? ignoring')
-            #     continue
 
             intersection = intersect(h1, h2)
             if intersection is None:
@@ -68,22 +52,37 @@ def p1():
             else:
                 # print('crossed outside! at', intersection)
                 pass
-
     return acc
-
-    # 16053 wrong
 
 
 def p2():
+    hailstones = []
+    for line in data:
+        p, v = line.split(' @ ')
+        p = tuple(int(n) for n in p.split(', '))
+        v = tuple(int(n) for n in v.split(', '))
+        hailstones.append((p, v))
 
-    return None
+    hailstones = hailstones[:3]
+
+    # ugh
+    import z3
+    solver = z3.Solver()
+    x, y, z, vx, vy, vz = [z3.Real(v) for v in ['x', 'y', 'z', 'vx', 'vy', 'vz']]
+    for i, ((cx, cy, cz), (hvx, hvy, hvz)) in enumerate(hailstones):
+        t = z3.Real(f't{i}')
+        solver.add(t > 0)
+        solver.add(x + vx * t == cx + hvx * t)
+        solver.add(y + vy * t == cy + hvy * t)
+        solver.add(z + vz * t == cz + hvz * t)
+    solver.check()
+    m = solver.model()
+    return sum(m[v].as_long() for v in [x,y,z])
 
 
 setday(24)
 
 data = parselines()
-# data = parselines(get_ints)
-# grid, inverse, unique = parsegrid()
 
-print('part1:', p1() )
-print('part2:', p2() )
+print('part1:', p1())
+print('part2:', p2())
