@@ -5,17 +5,14 @@ class Node:
         self.number = number
         self.presents = presents
         self.next = None
-        self.prev = None
 
 def p1():
     elves = [Node(1, 1)]
     for i in range(data-1):
         elf = Node(i+2, 1)
         last_elf = elves[-1]
-        elf.prev = last_elf
         last_elf.next = elf
         elves.append(elf)
-    elves[0].prev = elves[-1]
     elves[-1].next = elves[0]
 
     elf = elves[0]
@@ -26,19 +23,17 @@ def p1():
 
         later_elf = elf.next.next
         elf.next = later_elf
-        later_elf.last = elf
 
         elf = later_elf
     return elf.number
 
 def p2():
-    elves = [[1,i+1] for i in range(data)]
-    l = len(elves)//2
-    a,b = deque(elves[:l]), deque(elves[l:])
+    elves = [[1, i+1] for i in range(data)]
+    a, b = deque(elves[:data//2]), deque(elves[data//2:])
     toggle = data & 1
-    while len(a) and len(b):
-        a[0][0] += b[0][0]
-        b.popleft()
+    while a and b:
+        a[0][0] += b.popleft()[0]
+
         if toggle:
             a.append(b.popleft())
         toggle = not toggle
