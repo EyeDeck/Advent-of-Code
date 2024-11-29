@@ -7,8 +7,9 @@ def rock(r, w):
         y2 = y
         while y2 > 0 and (x,y2-1) not in r and (x,y2-1) not in w:
             y2 -= 1
-        r.remove((x,y))
-        r.add((x,y2))
+        if y != y2:
+            r.remove((x,y))
+            r.add((x,y2))
         # print(x,y,'->',x,y2)
     return r
 
@@ -28,17 +29,20 @@ def p2():
     r = copy.deepcopy(rocks)
     w = copy.deepcopy(walls)
 
+    wall_rots = {}
+    for i in range(4):
+        wall_rots[i] = w
+        w = rotate_2d(w, 90, True, width, height)
+
     seen = {}
     for i in range(1000000000):
-        for _ in range(4):
-            r = rock(r, w)
+        for rotation in range(4):
+            r = rock(r, wall_rots[rotation])
             # print('\n', i, _)
             # print_2d('.', {k: '#' for k in w}, {k: 'O' for k in r})
             r = rotate_2d(r, 90, True, width, height)
-            w = rotate_2d(w, 90, True, width, height)
 
-        hashable = (frozenset(r), frozenset(w))
-
+        hashable = frozenset(r)
         if hashable in seen.keys():
             last, weight = seen[hashable]
             cycle_len = i - last
@@ -57,6 +61,7 @@ grid, inverse, unique = parsegrid()
 _, _, width, height = grid_bounds(grid)
 walls = set()
 rocks = set()
+
 for k, v in grid.items():
     if v == '#':
         walls.add(k)
