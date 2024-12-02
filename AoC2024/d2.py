@@ -1,26 +1,5 @@
 import operator
-import sys
-import re
-# import numpy as np
-from collections import defaultdict  # defaultdict(int)
-import functools  # @functools.cache
-from collections import *
-from math import *
-from pprint import pprint
-
 from aoc import *
-
-
-# print_2d(padding, *dicts, constrain=(-256, -256, 256, 256)):
-# print_2d_repl(padding, *dicts, constrain=(-256, -256, 256, 256)):
-# INF = sys.maxsize
-# @memo
-# splat(f)
-# bfs(src, tgt, {n1: [n2, n3, n4]})
-# wbfs(src, tgt, edge_func)
-# astar(src, tgt, edge_func, heur_func)
-# ccs(srcs, neigh_func, filt_func?)
-# Dedup().seen(x)
 
 
 def is_gradual(nums):
@@ -28,34 +7,33 @@ def is_gradual(nums):
         op = operator.gt
     else:
         op = operator.lt
-    print(nums, op)
+
     for n in range(len(nums) - 1):
         a, b = nums[n], nums[n + 1]
-        print(a, b)
-        if not op(a, b) or abs(a-b) > 3:
-            print('nope')
+
+        if not op(a, b) or abs(a - b) > 3:
             return 0
-    return 1 # sum(nums)
+    return 1
 
 
-def is_gradual2(nums):
+def is_gradual_with_dampening(nums):
     for n in range(len(nums)):
-        if is_gradual(nums[:n] + nums[n+1:]):
+        if is_gradual(nums[:n] + nums[n + 1:]):
             return 1
     return 0
 
+
 def p1():
-    return sum(is_gradual2(line) for line in data)
+    return sum(is_gradual(line) for line in data)
 
 
 def p2():
-    return None
+    return sum(is_gradual_with_dampening(line) for line in data)
 
 
 setday(2)
 
 data = parselines(get_ints)
-# grid, inverse, unique = parsegrid()
 
-print('part1:', p1() )
-print('part2:', p2() )
+print('part1:', p1())
+print('part2:', p2())
