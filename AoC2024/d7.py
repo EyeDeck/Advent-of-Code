@@ -3,9 +3,9 @@ import operator
 
 from aoc import *
 
+
 def test_ops(target, numbers, operators):
-    op_ct = len(numbers) - 1
-    op_combs = [operators for _ in range(op_ct)]
+    op_combs = [operators for _ in range(len(numbers) - 1)]
 
     for ops in itertools.product(*op_combs):
         acc = numbers[0]
@@ -15,21 +15,18 @@ def test_ops(target, numbers, operators):
             return target
     return 0
 
-def p1():
+
+def solve(ops):
     acc = 0
     for line in data:
         target, numbers = line[0], line[1:]
-        acc += test_ops(target, numbers, [operator.add, operator.mul, lambda a, b: int(str(a) + str(b))])
+        acc += test_ops(target, numbers, ops)
     return acc
-
-
-def p2():
-    return None
 
 
 setday(7)
 
 data = parselines(get_ints)
 
-print('part1:', p1() )
-print('part2:', p2() )
+print('part1:', solve([operator.add, operator.mul]))
+print('part2:', solve([operator.add, operator.mul, lambda a, b: int(str(a) + str(b))]))
