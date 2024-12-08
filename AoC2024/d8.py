@@ -2,38 +2,24 @@ import itertools
 from aoc import *
 
 
-def p1():
+def solve(p2=False):
     antinodes = set()
     for key, coords in inverse.items():
         if key == '.':
             continue
-        # print(key)
+
         for pair in itertools.permutations(coords, 2):
             diff = vsub(*pair)
-            antinode = vadd(pair[0], diff)
-            # print(pair, diff, '=', antinodes)
-            if antinode in grid:
-                antinodes.add(antinode)
-    print_2d('  ', grid, {k: '#' for k in antinodes})
-    return len(antinodes)
 
-
-def p2():
-    antinodes = set()
-    for key, coords in inverse.items():
-        if key == '.':
-            continue
-        # print(key)
-        for pair in itertools.permutations(coords, 2):
-            diff = vsub(*pair)
-            antinode = pair[0]
+            antinode = vadd(pair[0], ((0, 0) if p2 else diff))
             while antinode in grid:
                 antinodes.add(antinode)
                 antinode = vadd(antinode, diff)
-                if antinode not in grid:
+                if antinode not in grid or not p2:
                     break
 
-    print_2d('  ', grid, {k: '#' for k in antinodes})
+    if verbose:
+        print_2d('  ', grid, {k: '#' for k in antinodes})
     return len(antinodes)
 
 
@@ -41,5 +27,7 @@ setday(8)
 
 grid, inverse, unique = parsegrid()
 
-print('part1:', p1())
-print('part2:', p2())
+verbose = '-v' in sys.argv or '--verbose' in sys.argv
+
+print('part1:', solve(False))
+print('part2:', solve(True))
