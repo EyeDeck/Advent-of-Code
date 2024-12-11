@@ -1,4 +1,3 @@
-import itertools
 import networkx as nx
 
 from aoc import *
@@ -6,13 +5,13 @@ from aoc import *
 
 def solve():
     G = nx.DiGraph()
-    sources = []
-    targets = []
+    sources = set()
+    targets = set()
     for coord, v in grid.items():
         if v == 0:
-            sources.append(coord)
+            sources.add(coord)
         elif v == 9:
-            targets.append(coord)
+            targets.add(coord)
         G.add_node(coord)
 
         for dir in DIRS:
@@ -25,11 +24,14 @@ def solve():
 
     p1_acc = 0
     p2_acc = 0
-    for pair in itertools.product(sources, targets):
-        if nx.has_path(G, pair[0], pair[1]):
-            p1_acc += 1
-            for _ in nx.all_simple_paths(G, pair[0], pair[1]):
+    for i, source in enumerate(sources):
+        print(f'calculating ({i}/{len(sources)}...', end='\r')
+        reachable = set(nx.descendants(G, source)) & targets
+        p1_acc += len(reachable)
+        for target in reachable:
+            for _ in nx.all_simple_paths(G, source, target):
                 p2_acc += 1
+    sys.stdout.write('\x1b[2K')  # ANSI erase line
 
     return p1_acc, p2_acc
 
