@@ -7,7 +7,7 @@ def tick(robots, n):
     new_robots = []
     for robot in robots:
         nxt = vadd(robot[0], vmul(robot[1], (n, n)))
-        nxt = (nxt[0] % WIDTH, nxt[1] % HEIGHT)
+        nxt = vmod(nxt, (WIDTH, HEIGHT))
         new_robots.append([nxt, robot[1]])
     return new_robots
 
@@ -38,12 +38,19 @@ def p2():
     while True:
         i += 1
         robots = tick(robots, 1)
-        print(i, end='\r')
-        positions = [k[0] for k in robots]
-        if len(positions) == len(set(positions)):
-            print_2d('.', {k:'#' for k in positions})
-            if input(f'{i} | enter (y) if this is a tree: ').lower().strip() == 'y':
-                return i
+        positions = {k[0] for k in robots}
+        neighbor_ct = 0
+        for pos in positions:
+            for d in DIRS:
+                if vadd(d, pos) in positions:
+                    neighbor_ct += 1
+        # heuristic, but works on the input data
+        if neighbor_ct > len(data):
+            if verbose:
+                print_2d('.', {k: '#' for k in positions})
+            return i
+        else:
+            print(i, end='\r')
 
 
 setday(14)
