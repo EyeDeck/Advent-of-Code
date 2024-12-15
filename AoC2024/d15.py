@@ -1,13 +1,13 @@
 from aoc import *
 
 
-def p1():
+def parse_puzzle(raw):
     grid = {}
     inverse = defaultdict(list)
     unique = {}
     non_unique = set()
 
-    for y, line in enumerate(grid_raw.split('\n')):
+    for y, line in enumerate(raw.split('\n')):
         line = line.strip()
         for x, c in enumerate(line):
             grid[x, y] = c
@@ -20,19 +20,18 @@ def p1():
             elif c not in non_unique:
                 unique[c] = (x, y)
 
-    print(grid, movements)
-    print_2d('.', grid)
-    robot = unique['@']
-
     for k in inverse['.']:
         del grid[k]
-    print_2d(' ', grid)
 
-    dir_map = {'^': (0, -1), '>': (1, 0), 'v': (0, 1), '<': (-1, 0)}
+    return grid, unique['@']
+
+
+def p1():
+    grid, robot = parse_puzzle(grid_raw)
 
     for move in movements:
-        dir = dir_map[move]
-        next_pos = robot_next_pos = vadd(dir, robot)
+        dir = DIR_MAP[move]
+        next_pos = robot_next_pos = vadd(robot, dir)
         stack = [('@', robot)]
         while True:
             if next_pos not in grid:
@@ -40,15 +39,15 @@ def p1():
             elif grid[next_pos] == 'O':
                 stack.append((grid[next_pos], next_pos))
                 next_pos = vadd(next_pos, dir)
-                print(next_pos)
             elif grid[next_pos] == '#':
                 robot_next_pos = None
                 stack = []
                 break
 
-        print(move, stack)
-        if robot_next_pos != None:
-            robot = robot_next_pos
+        if robot_next_pos is None:
+            continue
+
+        robot = robot_next_pos
 
         for object in stack:
             del grid[object[1]]
@@ -60,95 +59,56 @@ def p1():
             print_2d('.', grid)
 
     boxes = {k: k for k, v in grid.items() if v == 'O'}
-    # print_2d('.     ', boxes)
     return sum((k[0] + (k[1] * 100)) for k in boxes)
 
 
 def p2():
     grid_raw_doubled = grid_raw.replace('#', '##').replace('O', '[]').replace('.', '..').replace('@', '@.')
-    print(grid_raw_doubled)
 
-    grid = {}
-    inverse = defaultdict(list)
-    unique = {}
-    non_unique = set()
-
-    for y, line in enumerate(grid_raw_doubled.split('\n')):
-        line = line.strip()
-        for x, c in enumerate(line):
-            grid[x, y] = c
-
-            inverse[c].append((x, y))
-
-            if c in unique:
-                del unique[c]
-                non_unique.add(c)
-            elif c not in non_unique:
-                unique[c] = (x, y)
-
-    print(grid, movements)
-    print_2d('.', grid)
-    robot = unique['@']
-
-    for k in inverse['.']:
-        del grid[k]
-    print_2d(' ', grid)
-
-    dir_map = {'^': (0, -1), '>': (1, 0), 'v': (0, 1), '<': (-1, 0)}
+    grid, robot = parse_puzzle(grid_raw_doubled)
 
     for move in movements:
-        dir = dir_map[move]
-        next_pos = robot_next_pos = vadd(dir, robot)
-        old_frontier = set()
-        frontier = {('@', robot)}
+        dir = DIR_MAP[move]
+        robot_next_pos = vadd(robot, dir)
+        seen = {}
+        frontier = {robot: '@'}
         while frontier:
-            # print(frontier)
-            # print(old_frontier)
-            # input()
-            new_frontier = set()
-            for coord in frontier:
-                if coord in old_frontier:
+            next_pos = vadd(frontier.popitem()[0], dir)
+            if next_pos not in grid:
+                continue
+            next_tile = grid[next_pos]
+            if next_tile in '[]':
+                frontier[next_pos] = next_tile
+
+                if next_tile == '[' and dir != (-1, 0):
+                    other_piece = vadd(next_pos, (1, 0))
+                elif next_tile == ']' and dir != (1, 0):
+                    other_piece = vadd(next_pos, (-1, 0))
+                else:
                     continue
-                next_pos = vadd(coord[1], dir)
-                if next_pos not in grid:
-                    continue
-                elif grid[next_pos] in '[]':
-                    new_frontier.add((grid[next_pos], next_pos))
+                frontier[other_piece] = grid[other_piece]
 
-                    if grid[next_pos] == '[':
-                        other_piece = vadd(next_pos, (1, 0))
-                    else:
-                        other_piece = vadd(next_pos, (-1, 0))
-                    new_frontier.add((grid[other_piece], other_piece))
+            elif next_tile == '#':
+                robot_next_pos = None
+                break
 
-                    # print(next_pos)
-                elif grid[next_pos] == '#':
-                    print('wall!')
-                    robot_next_pos = None
-                    new_frontier = set()
-                    frontier = set()
-                    old_frontier = set()
-                    break
+            seen.update(frontier)
 
-            old_frontier.update(frontier)
-            frontier = new_frontier
+        if robot_next_pos is None:
+            continue
 
-        print(move, old_frontier)
-        if robot_next_pos is not None:
-            robot = robot_next_pos
+        robot = robot_next_pos
 
-        for object in old_frontier:
-            del grid[object[1]]
+        for k in seen:
+            del grid[k]
 
-        for object in old_frontier:
-            grid[vadd(object[1], dir)] = object[0]
+        for k, v in seen.items():
+            grid[vadd(k, dir)] = v
 
         if verbose:
             print_2d('.', grid)
-            input()
 
     boxes = {k: k for k, v in grid.items() if v == '['}
-    # print_2d('.     ', boxes)
     return sum((k[0] + (k[1] * 100)) for k in boxes)
 
 
@@ -157,9 +117,11 @@ setday(15)
 with open_default() as file:
     grid_raw, movements = file.read().split('\n\n')
 
-movements = ''.join(movements.split('\n'))
+movements = movements.replace('\n', '')
+
+DIR_MAP = {'^': (0, -1), '>': (1, 0), 'v': (0, 1), '<': (-1, 0)}
 
 verbose = '-v' in sys.argv or '--verbose' in sys.argv
 
-print('part1:', p1() )
-print('part2:', p2() )
+print('part1:', p1())
+print('part2:', p2())
