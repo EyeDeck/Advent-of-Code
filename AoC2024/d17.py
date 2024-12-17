@@ -18,8 +18,8 @@ def get_output(a,b,c,program):
     output = []
 
     while True:
-        if verbose:
-            print(a,b,c,pointer)
+        # if verbose:
+        #     print(a,b,c,pointer)
         try:
             instruction, operand = program[pointer:pointer+2]
         except ValueError:
@@ -37,8 +37,8 @@ def get_output(a,b,c,program):
         elif instruction == 4:  # bxc
             b = b ^ c
         elif instruction == 5:  # out
-            if verbose:
-                print('out', operand, '=', combo(operand) % 8)
+            # if verbose:
+            #     print('out', operand, '=', combo(operand) % 8)
             output.append(combo(operand) % 8)
         elif instruction == 6:  # bdv
             b = int(a / 2 ** combo(operand))
@@ -59,81 +59,12 @@ def p1():
 def p2():
     a, b, c = [i[0] for i in data[0:3]]
     program = data[4]
-    i = 1
-    while True:
-        output = get_output(i, b, c, program)
-        if output == program:
-            return i
-        print(oct(i), output)
-        # print(output)
-        # print(program)
-        # print(len(str(i))*'?', program)
-        # if len(output) < len(program):
-        #     i *= 8
-        # elif len(output) > len(program):
-        #     i //= 2
-        # else:
-        try:
-            i = int(input(), 8)
-        except ValueError:
-            i *= 8
-            # print('bad')
-            # if inp.strip() == '':
-            #     i = random.randint(i // 2, i * 2)
-            # else:
-            #     i = int(inp, 8)
-
-# def p2():
-#     a, b, c = [i[0] for i in data[0:3]]
-#     program = data[4]
-#     i = 4444444444444444
-#     while True:
-#         output = get_output(i, b, c, program)
-#         if output == program:
-#             return i
-#         # print(oct(i), output)
-#         print(output)
-#         # print(program)
-#         # print(len(str(i))*'?', program)
-#         if len(output) < len(program):
-#             i *= 2
-#         elif len(output) > len(program):
-#             i //= 2
-#         else:
-#             i += 1
-#             # try:
-#             #     i = int(input(), 8)
-#             # except ValueError:
-#             #     print('bad')
-#             # if inp.strip() == '':
-#             #     i = random.randint(i // 2, i * 2)
-#             # else:
-#             #     i = int(inp, 8)
-
-def p2():
-    a, b, c = [i[0] for i in data[0:3]]
-    program = data[4]
-
-    transform_map = {}
-    for i in range(8):
-        transform_map[i] = get_output(i, b, c, program)[0]
-    print(transform_map)
-    mapped = [transform_map[i] for i in program]
-    mapped.reverse()
-    ans = ''.join([str(i) for i in mapped])
-    print(ans)
-    print(get_output(int(ans,8), b, c, program))
-    # print(mapped)
-
-
-def p2():
-    a, b, c = [i[0] for i in data[0:3]]
-    program = data[4]
 
     i = 0
     while True:
         ans = get_output(i, b, c, program)
-        print(oct(i), ans, len(ans))
+        if verbose:
+            print(oct(i), ans, len(ans))
         if ans == program:
             return i
         if ans == program[-len(ans):]:
