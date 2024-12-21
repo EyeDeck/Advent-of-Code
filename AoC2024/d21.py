@@ -1,3 +1,5 @@
+import itertools
+
 from aoc import *
 import networkx as nx
 
@@ -77,22 +79,41 @@ def p1():
                 print(digit_path, path)
                 paths.append(''.join([keypad_map[path[i]][path[i+1]] for i in range(len(path) - 1)]))
             expanded_steps.append(paths)
-            best.append(min(paths, key=len))
-        # print(f'possibilities for {line}:')
-        # print(expanded_steps)
-        print(f'after 2 robots for {line}:')
-        best = ''.join(best)
-        print(best)
-        best = 'A' + best
-        three = ''.join([keypad_map[best[i]][best[i+1]] for i in range(len(best) - 1)])
-        print(f'after 3 robots for {line}:')
-        print(three)
+            # best.append(min(paths, key=len))
+        print(f'possibilities for {line}:')
+        print(expanded_steps)
 
-        # v<A<AA>>^AvAA^<A>Av<<A>>^AvA^Av<A^>A<Av<A>>^AAvA^Av<A<A>>^AAA<A>vA^A
-        # <vA<AA>>^AvAA<^A>A<v<A>>^AvA^A<vA>^A<v<A>^A>AAvA^A<v<A>A>^AAAvA<^A>A
+        optimized_possibilities = []
+        for list_of_possiblities in expanded_steps:
+            print(list_of_possiblities)
+            mn = len(min(list_of_possiblities, key=len))
+            optimized_possibilities.append([l for l in list_of_possiblities if len(l) == mn])
+            print(mn)
 
-        print(line, int(''.join(re.findall(r'\d', line))), '*', len(three))
-        acc += int(''.join(re.findall(r'\d', line))) * len(three)
+        print(f'optimized_possibilities for {line}:')
+        print(optimized_possibilities)
+
+        shortest = INF
+        for possibility in itertools.product(*optimized_possibilities):
+            possibility = 'A' + ''.join(possibility)
+            three = ''.join([keypad_map[possibility[i]][possibility[i + 1]] for i in range(len(possibility) - 1)])
+            shortest = min(shortest, len(three))
+
+        # print(f'after 2 robots for {line}:')
+        # best = ''.join(best)
+        # print(best)
+        # best = 'A' + best
+        # three = ''.join([keypad_map[best[i]][best[i+1]] for i in range(len(best) - 1)])
+        # print(f'after 3 robots for {line}:')
+        # print(three)
+        #
+        # # v<A<AA>>^AvAA^<A>Av<<A>>^AvA^Av<A^>A<Av<A>>^AAvA^Av<A<A>>^AAA<A>vA^A
+        # # <vA<AA>>^AvAA<^A>A<v<A>>^AvA^A<vA>^A<v<A>^A>AAvA^A<v<A>A>^AAAvA<^A>A
+        #
+        # print(line, int(''.join(re.findall(r'\d', line))), '*', len(three))
+        # acc += int(''.join(re.findall(r'\d', line))) * len(three)
+        num_part = int(''.join(re.findall(r'\d', line)))
+        acc += num_part * shortest
 
 
     return acc
