@@ -1,3 +1,5 @@
+import collections
+
 from aoc import *
 
 
@@ -8,64 +10,38 @@ def tick(n):
     return n
 
 
-def p1():
-    acc = 0
-    for line in data:
-        secret = line[0]
-        for _ in range(2000):
-            secret = tick(secret)
-        acc += secret
-
-    print(tick(123))
-
-    return acc
-
-
-def p2():
+def solve():
     monkey_changes = []
-    for line in data:
-        secret = line[0]
+    acc = 0
+    for line_n, secret in enumerate(data):
         nums = [secret % 10]
         for _ in range(2000):
             secret = tick(secret)
             nums.append(secret % 10)
-            # print(secret, nums)
-            # input()
+        acc += secret
+        if line_n % 20 == 0:
+            print(f'\r[{(line_n/len(data)*100):.2f}%] part1: {acc}', end='', flush=True)
         monkey_changes.append(nums)
+    yield acc
 
-    seen = set()
-    diff_data = []
-    for monkey_data in monkey_changes:
-        diff_datum = {}
+    diff_data = collections.Counter()
+    for line_n, monkey_data in enumerate(monkey_changes):
+        diff_datum = collections.Counter()
         for i in range(len(monkey_data) - 4):
-            ns = monkey_data[i:i + 5]
-            # print(ns)
-            diff_seq = tuple(ns[i + 1] - ns[i] for i in range(len(ns) - 1))
-            seen.add(diff_seq)
+            diff_seq = tuple(monkey_data[i + j + 1] - monkey_data[i + j] for j in range(4))
             if diff_seq not in diff_datum:
-                diff_datum[diff_seq] = ns[-1]
-            # print(diff_seq, '=', ns[-1])
-        # input()
-        diff_data.append(diff_datum)
-
-    best = 0
-    best_set = None
-    for diff_set in seen:
-        acc = 0
-        for diff_datum in diff_data:
-            if diff_set in diff_datum:
-                acc += diff_datum[diff_set]
-        # best = max(acc, best)
-        if acc > best:
-            best = acc
-            best_set = diff_set
-    print(best_set)
-    return best
+                diff_datum[diff_seq] = monkey_data[i + 4]
+        diff_data += diff_datum
+        if line_n % 8 == 0:
+            best = max(diff_data, key=diff_data.get)
+            print(f'\r[{line_n/len(monkey_changes)*100:.2f}%] part2: {diff_data[best]} {tuple(best)}', end='', flush=True)
+    yield max(diff_data.values())
 
 
 setday(22)
 
-data = parselines(get_ints)
+data = [line[0] for line in parselines(get_ints)]
 
-print('part1:', p1())
-print('part2:', p2())
+gen = solve()
+print('\r\033[Kpart1:', next(gen), flush=True)
+print('\r\033[Kpart2:', next(gen), flush=True)
