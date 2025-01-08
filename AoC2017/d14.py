@@ -61,7 +61,7 @@ with open_default() as file:
     data = file.read().strip()
 
 
-verbose = '-v' in sys.argv or '--verbose' in sys.argv or True
+verbose = '-v' in sys.argv or '--verbose' in sys.argv
 
 print('part1:', p1())
 print('part2:', p2())
