@@ -156,3 +156,6 @@ dmypy.json
 cython_debug/
 
 .idea
+HoD/noahs-customers.jsonl
+HoD/noahs-orders.jsonl
+HoD/noahs-products.jsonl
