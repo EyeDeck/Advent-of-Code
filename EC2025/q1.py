@@ -2,7 +2,7 @@ from ec import *
 
 
 def p1():
-    names, instructions = [x.split(',') for x in parsedouble(1)]
+    names, instructions = [x.split(',') for x in parse_double_break(1)]
     name_len = len(names)
     name_max = name_len - 1
 
@@ -17,7 +17,7 @@ def p1():
 
 
 def p2():
-    names, instructions = [x.split(',') for x in parsedouble(2)]
+    names, instructions = [x.split(',') for x in parse_double_break(2)]
     name_len = len(names)
 
     pointer = 0
@@ -32,7 +32,7 @@ def p2():
 
 
 def p3():
-    names, instructions = [x.split(',') for x in parsedouble(3)]
+    names, instructions = [x.split(',') for x in parse_double_break(3)]
     name_len = len(names)
 
     for ins in instructions:
