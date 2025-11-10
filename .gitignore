@@ -4,6 +4,7 @@ frame*.png
 
 #my inputs are usually d(#).txt
 d*.txt
+q*.txt
 
 AoC2021/d13/
 
