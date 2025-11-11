@@ -2,8 +2,6 @@ from ec import *
 
 
 def cadd(a,b):
-    X1, X2 = a
-    Y1, Y2 = b
     return vadd(a,b)
 
 
@@ -27,60 +25,39 @@ def p1():
     return str(list(R)).replace(' ', '')
 
 
-def p2():
-    A = parse_lines(2, get_ints)[0]
+def p2(p3=False):
+    A = parse_lines(3 if p3 else 2, get_ints)[0]
 
     acc = 0
     grid = {}
-    for y in range(101):
-        for x in range(101):
-            point = vadd(A,(x*10,y*10))
+    grid_size, point_mult = (1001, 1) if p3 else (101, 10)
+    for y in range(grid_size):
+        for x in range(grid_size):
+            point = vadd(A,(x*point_mult,y*point_mult))
 
             R = [0,0]
             for i in range(100):
                 R = cmul(R,R)
                 R = cdiv(R, (100000,100000))
                 R = cadd(R, point)
-                if R[0] > 1000000 or R[0] < -1000000 or R[1] > 1000000 or R[1] < -1000000:
+
+                # if any(not (-1000000 <= i <= 1000000) for i in R):  # wew lad that's slow
+                if not (-1000000 <= R[0] <= 1000000) or not (-1000000 <= R[1] <= 1000000):
                     break
             else:
-                # print(point, R)
                 acc += 1
-                grid[x,y] = 'x'
+                if verbose:
+                    grid[x,y] = 'x'
 
-    # print(grid)
-    print_2d('. ', grid)
-    return acc
-
-
-def p3():
-    A = parse_lines(3, get_ints)[0]
-
-    acc = 0
-    grid = {}
-    for y in range(1001):
-        for x in range(1001):
-            point = vadd(A, (x,y)) # (x*10,y*10))
-
-            R = [0,0]
-            for i in range(100):
-                R = cmul(R,R)
-                R = cdiv(R, (100000,100000))
-                R = cadd(R, point)
-                if R[0] > 1000000 or R[0] < -1000000 or R[1] > 1000000 or R[1] < -1000000:
-                    break
-            else:
-                # print(point, R)
-                acc += 1
-                grid[x,y] = 'x'
-
-    # print(grid)
-    # print_2d('. ', grid)
+    if verbose:
+        print_2d('. ', grid)
     return acc
 
 
 setquest(2)
 
+verbose = '-v' in sys.argv or '--verbose' in sys.argv
+
 print('part1:', p1())
-print('part2:', p2())
-print('part3:', p3())
+print('part2:', p2(False))
+print('part3:', p2(True))

@@ -16,7 +16,7 @@ def setquest(n):
 
 class open_default(object):
     def __init__(self, n):
-        if len(sys.argv) > 1:
+        if len(sys.argv) > 1 and sys.argv[1][1] != '-':
             self.fn = sys.argv[1]
         else:
             self.fn = f'q{_QUEST}_{n}.txt'
