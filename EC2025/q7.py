@@ -1,95 +1,67 @@
 from ec import *
 
 
-def p1():
-    names, rules_raw = parse_double_break(1)
+def parse_n(n):
+    names, rules_raw = parse_double_break(n)
     names = names.split(',')
     rules_raw = rules_raw.split('\n')
+
     rules = {}
     for rule in rules_raw:
-        print(rule)
         l,r = rule.split(' > ')
         rules[l] = set()
         for c in r.split(','):
             rules[l].add(c)
 
-    print(rules)
+    return names, rules
+
+
+def validate_name(name, rules):
+    for i in range(len(name) - 1):
+        l, r = name[i], name[i + 1]
+        if l not in rules:
+            break
+        if r not in rules[l]:
+            break
+    else:
+        return True
+    return False
+
+
+def p1():
+    names, rules = parse_n(1)
 
     for name in names:
-        for i in range(len(name)-1):
-            l,r = name[i], name[i+1]
-            print(l,r)
-            if l not in rules:
-                break
-            if r not in rules[l]:
-                break
-        else:
+        if validate_name(name, rules):
             return name
-    return
 
 
 def p2():
-    names, rules_raw = parse_double_break(2)
-    names = names.split(',')
-    rules_raw = rules_raw.split('\n')
-    rules = {}
-    for rule in rules_raw:
-        print(rule)
-        l,r = rule.split(' > ')
-        rules[l] = set()
-        for c in r.split(','):
-            rules[l].add(c)
-
-    print(rules)
+    names, rules = parse_n(2)
 
     acc = 0
     for index, name in enumerate(names):
-        for i in range(len(name)-1):
-            l,r = name[i], name[i+1]
-            print(l,r)
-            if l not in rules:
-                break
-            if r not in rules[l]:
-                break
-        else:
+        if validate_name(name, rules):
             acc += index + 1
 
     return acc
 
 
 def p3():
-    names, rules_raw = parse_double_break(3)
-    names = names.split(',')
-    rules_raw = rules_raw.split('\n')
-    rules = {}
-    for rule in rules_raw:
-        print(rule)
-        l,r = rule.split(' > ')
-        rules[l] = set()
-        for c in r.split(','):
-            rules[l].add(c)
-
-    print(rules)
+    names, rules = parse_n(3)
 
     valid_prefixes = []
     for index, name in enumerate(names):
-        for i in range(len(name)-1):
-            l,r = name[i], name[i+1]
-            print(l,r)
-            if l not in rules:
-                break
-            if r not in rules[l]:
-                break
-        else:
+        if validate_name(name, rules):
             valid_prefixes.append(name)
 
+    acc = 0
     seen = set()
     for prefix in valid_prefixes:
         q = [prefix]
 
         parent = {}
 
-        print(q)
         while q:
             cur = q.pop()
             if len(cur) > 11:
@@ -101,16 +73,15 @@ def p3():
                     continue
                 else:
                     seen.add(n)
+                    if 7 <= len(n) <= 11:
+                        acc += 1
                 parent[n] = cur
                 q.append(n)
 
-    return sum(1 for name in seen if 7 <= len(name) <= 11)
-
+    return acc
 
 
 setquest(7)
-
-verbose = '-v' in sys.argv or '--verbose' in sys.argv
 
 print('part1:', p1())
 print('part2:', p2())
