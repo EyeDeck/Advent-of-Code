@@ -6,6 +6,7 @@ INF = sys.maxsize
 
 _QUEST = None
 
+verbose = '-v' in sys.argv or '--verbose' in sys.argv
 
 def setquest(n):
     global _QUEST

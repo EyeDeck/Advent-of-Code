@@ -27,8 +27,6 @@ def p3():
 
 setquest()
 
-verbose = '-v' in sys.argv or '--verbose' in sys.argv
-
 print('part1:', p1())
 print('part2:', p2())
 print('part3:', p3())
