@@ -1,4 +1,5 @@
 import itertools
+import math
 from collections import defaultdict
 
 import networkx as nx
@@ -6,64 +7,63 @@ import networkx as nx
 from ec import *
 
 
-def check_parent(a, b, c):
-    # parent a and b, child c
-    for (x, y), z in zip(zip(a, b), c):
-        # print(x, y, z)
+def read_input(n):
+    return {k: v for k, v in parse_lines(n, lambda x: x.split(':'))}
+
+
+def validate_child(parent_a, parent_b, child):
+    for (x, y), z in zip(zip(parent_a, parent_b), child):
         if z not in (x, y):
             return False
     return True
 
 
-def p1():
-    data = {k: v for k, v in parse_lines(1, lambda x: x.split(':'))}
+def get_parents(data):
+    known_parents = defaultdict(set)
+    for (parent_id_a, parent_genes_a), (parent_id_b, parent_genes_b) in itertools.combinations(data.items(), 2):
+        for child_id, child_genes in data.items():
+            if child_id == parent_id_a or child_id == parent_id_b:
+                continue
+            if validate_child(parent_genes_a, parent_genes_b, child_genes):
+                known_parents[child_id].add(parent_id_a)
+                known_parents[child_id].add(parent_id_b)
+    return known_parents
 
-    for perm in itertools.permutations(data.values(), 3):
-        if check_parent(*perm):
-            a_sum = sum(1 for x in zip(perm[0], perm[2]) if x[0] == x[1])
-            b_sum = sum(1 for x in zip(perm[1], perm[2]) if x[0] == x[1])
-            return a_sum * b_sum
+
+def calc_similarity(parents, child):
+    return math.prod(sum(1 for x in zip(parent, child) if x[0] == x[1]) for parent in parents)
+
+
+def p1():
+    data = read_input(1)
+
+    known_parents = get_parents(data)
+    child, (parents) = known_parents.popitem()
+
+    return calc_similarity((data[p] for p in parents), data[child])
 
 
 def p2():
-    data = {k: v for k, v in parse_lines(2, lambda x: x.split(':'))}
+    data = read_input(2)
 
-    known_parents = defaultdict(set)
-    for perm in itertools.permutations(data.items(), 3):
-        a,b,c = perm
-        if check_parent(a[1], b[1], c[1]):
-            known_parents[c[0]].add(a[0])
-            known_parents[c[0]].add(b[0])
-    # print(known_parents)
+    known_parents = get_parents(data)
 
     acc = 0
     for child, parents in known_parents.items():
-        parents = list(parents)
-        a_sum = sum(1 for x in zip(data[child], data[parents[0]]) if x[0] == x[1])
-        b_sum = sum(1 for x in zip(data[child], data[parents[1]]) if x[0] == x[1])
-        acc += a_sum * b_sum
-    # if check_parent(*perm):
+        acc += calc_similarity((data[p] for p in parents), data[child])
 
     return acc
 
 
 def p3():
-    data = {k: v for k, v in parse_lines(3, lambda x: x.split(':'))}
+    data = read_input(3)
 
-    known_parents = defaultdict(set)
-    for perm in itertools.permutations(data.items(), 3):
-        a,b,c = perm
-        if check_parent(a[1], b[1], c[1]):
-            known_parents[c[0]].add(a[0])
-            known_parents[c[0]].add(b[0])
-    print(known_parents)
+    known_parents = get_parents(data)
 
     G = nx.Graph()
-    G.add_nodes_from(known_parents.keys())
     for child, parents in known_parents.items():
         for parent in parents:
             G.add_edge(child, parent)
-            print('added edge', child, parent)
 
     largest_connected = sorted(nx.connected_components(G), key=len)[-1]
 
