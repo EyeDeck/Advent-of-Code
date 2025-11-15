@@ -1,8 +1,13 @@
 import re
 import sys
+from collections import defaultdict
+from functools import lru_cache
 from operator import itemgetter
 
 INF = sys.maxsize
+
+memo = lru_cache(maxsize=None)
+memo1m = lru_cache(maxsize=2 ** 20)
 
 _QUEST = None
 
@@ -143,3 +148,25 @@ def print_2d_repl(padding, *dicts, constrain=(-256, -256, 256, 256)):
 def grid_bounds(d):
     return min(d, key=itemgetter(0))[0], min(d, key=itemgetter(1))[1], \
            max(d, key=itemgetter(0))[0], max(d, key=itemgetter(1))[1]
+
+
+def parse_grid(n, ignore=None):
+    grid = {}
+    inverse = defaultdict(list)
+    unique = {}
+    non_unique = set()
+
+    for y, line in enumerate(parse_lines(n)):
+        for x, c in enumerate(line):
+            if ignore is None or c not in ignore:
+                grid[x, y] = c
+
+                inverse[c].append((x, y))
+
+                if c in unique:
+                    del unique[c]
+                    non_unique.add(c)
+                elif c not in non_unique:
+                    unique[c] = (x, y)
+
+    return grid, inverse, unique
