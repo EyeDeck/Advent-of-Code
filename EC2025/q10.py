@@ -5,8 +5,6 @@ def p1():
     grid, inverse, unique = parse_grid(1)
     depth = 4
 
-    # print(grid)
-
     q = [(unique['D'], 0)]
 
     acc = 0
@@ -21,8 +19,7 @@ def p1():
             seen_pos.add(cur_pos)
 
         if cur_depth < depth:
-            for pos in (vadd(cur_pos, off) for off in
-                        [(2, 1), (1, 2), (-2, 1), (-1, 2), (2, -1), (1, -2), (-2, -1), (-1, -2)]):
+            for pos in (vadd(cur_pos, off) for off in dragon_moves):
                 next_state = (pos, cur_depth + 1)
                 if next_state in seen_states:
                     continue
@@ -35,116 +32,100 @@ def p2():
     grid, inverse, unique = parse_grid(2)
     max_depth = 20
 
-    dragon_pos = unique['D']
+    dragon = unique['D']
+    sheep = inverse['S']
     hideouts = inverse['#']
-    all_sheep = inverse['S']
 
-    # print(all_sheep)
-    # print('hideouts:')
-    # print(hideouts)
-
-    possible_dragon_positions = defaultdict(set)
-    q = [(dragon_pos, 0)]
+    # calculate each set of all reachable tiles for the dragon, indexed per turn
+    dragon_reachable = [set() for _ in range(max_depth)]
+    q = [(dragon, 0)]
     while q:
-        cur_pos, cur_depth = q.pop()
+        dragon_pos, depth = q.pop()
 
-        if cur_depth < max_depth:
-            next_depth = cur_depth + 1
-            for next_pos in (vadd(cur_pos, off) for off in dragon_moves):
-                if next_pos not in possible_dragon_positions[next_depth]:
-                    q.append((next_pos, next_depth))
-                    possible_dragon_positions[next_depth].add(next_pos)
-        # print('poss', possible_dragon_positions)
-
-    # print(possible_dragon_positions)
-
+        if depth < max_depth:
+            for dragon_ticked in (vadd(dragon_pos, off) for off in dragon_moves):
+                if dragon_ticked not in dragon_reachable[depth]:
+                    dragon_reachable[depth].add(dragon_ticked)
+                    q.append((dragon_ticked, depth+1))
+    
+    # tick all the sheep and find out if they overlap with a dragon on either the start or end of their turn
     acc = 0
-    for i in range(1, max_depth + 1):
-        dead_sheep = set()
+    for dragon_positions in dragon_reachable:
         next_sheep = set()
-        for sheep in all_sheep:
-            if sheep in possible_dragon_positions[i] and sheep not in hideouts:
-                dead_sheep.add(sheep)
+        for sheep_start in sheep:
+            if sheep_start in dragon_positions and sheep_start not in hideouts:
                 acc += 1
                 continue
-            next_pos = vadd((0, 1), sheep)
-            if next_pos in possible_dragon_positions[i] and next_pos not in hideouts:
-                dead_sheep.add(next_pos)
+            sheep_end = vadd((0, 1), sheep_start)
+            if sheep_end in dragon_positions and sheep_end not in hideouts:
                 acc += 1
             else:
-                next_sheep.add(next_pos)
-        # print_2d('. ', {k:'D' for k in possible_dragon_positions[i] if k not in hideouts}, {k:'S' for k in all_sheep}, {k:'#' for k in hideouts}, {k:'X' for k in dead_sheep} )
+                next_sheep.add(sheep_end)
 
-        all_sheep = next_sheep
+        sheep = next_sheep
 
     return acc
 
 
 def p3():
     grid, inverse, unique = parse_grid(3)
-    dragon_pos = unique['D']
+    dragon = unique['D']
+    sheep = inverse['S']
     hideouts = inverse['#']
-    all_sheep = inverse['S']
 
+    # save some computation by ending the search early if a sheep hits an unbroken chain of hideouts to the exit
     bounds = grid_bounds(grid)
-    print(bounds)
     sheep_goals = {x: bounds[3] + 1 for x in range(bounds[2]+1)}
-    print(sheep_goals)
     for x in range(bounds[0], bounds[2]+1):
         for y in range(bounds[1], bounds[3]+1):
-            print(x, y, [grid[x, y2] == '#' for y2 in range(y, bounds[3]+1)])
             if all(grid[x, y2] == '#' for y2 in range(y, bounds[3]+1)):
                 sheep_goals[x] = y
                 break
-    print(sheep_goals)
     sheep_goals = {(k,v) for k,v in sheep_goals.items()}
 
-    # return
-
     @memo
-    def get_win_count(dragon, sheep, turn):
+    def get_win_count(dragon_pos, sheep_all, turn):
         # print('running', dragon, sheep, turn)
-        # print_2d('. ', {c:'.' for c in all_sheep}, {c:'#' for c in hideouts}, {dragon:'D'}, {c:'S' for c in sheep})
+        # print_2d('. ', {c:'.' for c in sheep}, {c:'#' for c in hideouts}, {dragon:'D'}, {c:'S' for c in sheep})
         # input()
-        if len(sheep) == 0:
-            # print('returned 1')
+        if not sheep_all:
             return 1
         acc = 0
 
         if turn:  # sheep
             has_sheep_moved = False
-            for sh in sheep:
-                ticked_sheep = vadd(sh, (0, 1))
-                if ticked_sheep in sheep_goals:
+            for sheep in sheep_all:
+                sheep_ticked = vadd(sheep, (0, 1))
+                if sheep_ticked in sheep_goals:
+                    # sheep had a valid move and won, do not let dragon move twice in a row
                     has_sheep_moved = True
-                    # print(f'sheep {sh} moving down would win--skipping')
                     continue
-                if ticked_sheep == dragon and dragon not in hideouts:
+                if sheep_ticked == dragon_pos and dragon_pos not in hideouts:
+                    # sheep trying to move into dragon, skip this move
                     continue
 
-                next_sheep = sheep - {sh} | {ticked_sheep}
+                sheep_all_next = sheep_all - {sheep} | {sheep_ticked}
                 has_sheep_moved = True
 
-                acc += get_win_count(dragon, next_sheep, False)
+                acc += get_win_count(dragon_pos, sheep_all_next, False)
 
             if not has_sheep_moved:
-                # print('no sheep could move:', sheep, dragon)
-                acc += get_win_count(dragon, sheep, False)
-        else:
-            for ticked_dragon in (vadd(dragon, off) for off in dragon_moves):
-                next_sheep = sheep
-                if ticked_dragon not in grid:
+                # skip sheep's turn if no sheep was able to move
+                acc += get_win_count(dragon_pos, sheep_all, False)
+
+        else:  # dragon
+            for dragon_ticked in (vadd(dragon_pos, off) for off in dragon_moves):
+                sheep_all_next = sheep_all
+                if dragon_ticked not in grid:
                     continue
-                if ticked_dragon in next_sheep and ticked_dragon not in hideouts:
-                    # print(f'dragon ate {ticked_dragon}')
-                    next_sheep = next_sheep - {ticked_dragon}
+                if dragon_ticked in sheep_all_next and dragon_ticked not in hideouts:
+                    sheep_all_next = sheep_all_next - {dragon_ticked}
 
-                acc += get_win_count(ticked_dragon, next_sheep, True)
+                acc += get_win_count(dragon_ticked, sheep_all_next, True)
 
-        # print('returned', acc)
         return acc
 
-    return get_win_count(dragon_pos, frozenset(all_sheep), True)
+    return get_win_count(dragon, frozenset(sheep), True)
 
 
 setquest(10)
