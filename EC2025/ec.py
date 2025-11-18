@@ -170,3 +170,39 @@ def parse_grid(n, ignore=None):
                     unique[c] = (x, y)
 
     return grid, inverse, unique
+
+
+HEXDIRS = [
+    (0, 1, -1),
+    (-1, 1, 0),
+    (-1, 0, 1),
+    (0, -1, 1),
+    (1, -1, 0),
+    (1, 0, -1),
+]
+
+
+def hexdist(a, b):
+    x1, y1, z1 = a
+    x2, y2, z2 = b
+    return (abs(x1 - x2) + abs(y1 - y2) + abs(z1 - z2)) // 2
+
+
+# starting from east, running ccw
+DIRS = [
+    (1, 0),
+    (0, -1),
+    (-1, 0),
+    (0, 1),
+]
+
+DIAGDIRS = [
+    (1, 0),
+    (1, -1),
+    (0, -1),
+    (-1, -1),
+    (-1, 0),
+    (-1, 1),
+    (0, 1),
+    (1, 1),
+]
