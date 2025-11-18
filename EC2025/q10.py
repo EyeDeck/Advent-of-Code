@@ -132,6 +132,131 @@ def p3():
     return get_win_count(dragon, tuple(sorted(sheep)), True)
 
 
+def p3_bitboard():
+    sys.setrecursionlimit(10000)  # only necessary for more complicated inputs than the official ones
+
+    grid, inverse, unique = parse_grid(3)
+    dragon = unique['D']
+    sheep = inverse['S']
+    hideouts = inverse['#']
+
+    bounds = grid_bounds(grid)
+    grid_width, grid_height = bounds[2:4]
+    grid_width += 1
+    grid_height += 1
+
+    w_x = (grid_width - 1).bit_length()
+    w_y = grid_height.bit_length()
+
+    dead_sheep = (1 << w_y) - 1
+
+    offset_dragon_x = w_y * grid_width
+    offset_dragon_y = offset_dragon_x + w_x
+    mask_dragon_x = (((1 << w_x) - 1) << offset_dragon_x)
+    mask_dragon_y = (((1 << w_y) - 1) << offset_dragon_y)
+
+    offset_toggle = offset_dragon_y + w_y
+    mask_toggle = 1 << offset_toggle
+
+    mask_x = ((1 << w_x) - 1)
+    mask_y = ((1 << w_y) - 1)
+
+    mask_all_sheep = (1 << (w_y * grid_width)) - 1
+
+    starting_state = (dragon[0] << offset_dragon_x) + (dragon[1] << offset_dragon_y) + (1 << offset_toggle)
+
+    sheep_y = [dead_sheep for _ in range(grid_width)]
+    for x, y in sheep:
+        sheep_y[x] = y
+    for x, y in enumerate(sheep_y):
+        starting_state += y << (x * w_y)
+
+    sheep_offsets = [(w_y * i) for i in range(grid_width)]
+    sheep_masks = [mask_y << o for o in sheep_offsets]
+
+    # pre-cache valid adjacent tiles for each dragon location
+    dragon_legal_moves = {pos: [c for move in dragon_moves if (c := vadd(pos, move)) in grid] for pos in grid}
+
+    dragon_legal_moves_flat = [[] for _ in range(1 << (w_x + w_y))]
+    for (x, y), moves in dragon_legal_moves.items():
+        dragon_legal_moves_flat[x + (y << w_x)] = [a + (b << w_x) for a, b in moves]
+
+    # save some computation by ending the search early if a sheep hits an unbroken chain of hideouts to the exit
+    sheep_goals = [grid_height for _ in range(grid_width)]
+
+    for x in range(grid_width):
+        for y in range(grid_height):
+            if all(grid[x, y2] == '#' for y2 in range(y, bounds[3] + 1)):
+                sheep_goals[x] = y
+                break
+
+    # also pre-cache sheep moves, while we're at it
+    sheep_moves = [0 for _ in range(1 << (w_x + w_y))]
+    for (x, y) in grid:
+        sheep_moves[x + (y << w_x)] = (-1 if sheep_goals[x] == y + 1 else y + 1)
+
+    hideouts_flat = {x + (y << w_x) for (x, y) in hideouts}
+
+    @memo
+    def get_win_count(state):
+        if state & mask_all_sheep == mask_all_sheep:
+            return 1
+        acc = 0
+
+        dragon_x_raw = state & mask_dragon_x
+        dragon_y_raw = state & mask_dragon_y
+
+        dragon_x = dragon_x_raw >> offset_dragon_x
+        dragon_y = dragon_y_raw >> offset_dragon_y
+
+        dragon_pos = dragon_x + (dragon_y << w_x)
+
+        if state & mask_toggle:  # sheep
+            has_sheep_moved = False
+            for i in range(grid_width):
+                bit_offset = sheep_offsets[i]
+                sheep_mask = sheep_masks[i]
+
+                sheep_raw = state & sheep_mask
+                sheep_y = sheep_raw >> bit_offset
+                if sheep_y == dead_sheep:
+                    continue
+
+                sheep_ticked = sheep_moves[i + (sheep_y << w_x)]
+
+                if sheep_ticked == -1:
+                    # sheep had a valid move and won, do not let dragon move twice in a row
+                    has_sheep_moved = True
+                    continue
+                if i == dragon_x and sheep_ticked == dragon_y and dragon_pos not in hideouts_flat:
+                    # sheep trying to move into dragon, skip this move
+                    continue
+
+                has_sheep_moved = True
+
+                acc += get_win_count((state - sheep_raw | (sheep_ticked << bit_offset)) ^ mask_toggle)
+                # acc += get_win_count(((state & ~(mask_y << bit_offset)) | (sheep_ticked << bit_offset)) ^ mask_toggle)
+
+            if not has_sheep_moved:
+                # skip sheep's turn if no sheep was able to move
+                acc += get_win_count(state ^ mask_toggle)
+
+        else:  # dragon
+            next_state_base = (state - dragon_x_raw - dragon_y_raw) ^ mask_toggle
+            for dragon_ticked in dragon_legal_moves_flat[dragon_pos]:
+                next_state = next_state_base + (dragon_ticked << offset_dragon_x)
+                if dragon_ticked not in hideouts_flat:
+                    d_x, d_y = dragon_ticked & mask_x, dragon_ticked >> w_x
+                    bit_offset = (w_y * d_x)
+                    sheep_y_bits = state & (mask_y << bit_offset)
+                    if (sheep_y_bits >> bit_offset) == d_y:
+                        next_state = next_state - sheep_y_bits | (dead_sheep << bit_offset)
+
+                acc += get_win_count(next_state)
+        return acc
+
+    return get_win_count(starting_state)
+
 
 setquest(10)
 
@@ -139,4 +264,5 @@ dragon_moves = [(2, 1), (1, 2), (-2, 1), (-1, 2), (2, -1), (1, -2), (-2, -1), (-
 
 print('part1:', p1())
 print('part2:', p2())
-print('part3:', p3())
+# print('part3:', p3())
+print('part3:', p3_bitboard())
