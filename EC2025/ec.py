@@ -1,6 +1,7 @@
+import heapq
 import re
 import sys
-from collections import defaultdict
+from collections import defaultdict, deque
 from functools import lru_cache
 from operator import itemgetter
 
@@ -206,3 +207,106 @@ DIAGDIRS = [
     (0, 1),
     (1, 1),
 ]
+
+
+def bfs(src, tgt, neighbors):
+    q = deque([src])
+
+    parent = {}
+
+    while q:
+        cur = q.popleft()
+        if cur == tgt:
+            break
+
+        for n in neighbors[cur]:
+            if n in parent:
+                continue
+            parent[n] = cur
+            q.append(n)
+
+    if tgt not in parent:
+        return None
+
+    pos = tgt
+    path = []
+    while pos != src:
+        path.append(pos)
+        pos = parent[pos]
+    path.append(src)
+    path.reverse()
+    return path
+
+
+def wbfs(src, tgt, edges):
+    """Find a path from `src` to `tgt`.  `edges` takes a node label and returns
+    a list of `(node, cost)` pairs."""
+    q = [(0, src, None)]
+
+    parent = {}
+
+    while q:
+        cost, cur, prev = heapq.heappop(q)
+        if cur in parent:
+            continue
+        parent[cur] = prev
+        if cur == tgt:
+            break
+
+        for (n, ncost) in edges(cur):
+            if n in parent:
+                continue
+            heapq.heappush(q, (cost + ncost, n, cur))
+
+    if tgt not in parent:
+        return None
+
+    pos = tgt
+    path = []
+    while pos != src:
+        path.append(pos)
+        pos = parent[pos]
+    path.append(src)
+    path.reverse()
+    return path
+
+
+def astar(src, tgt, edges, heur):
+    """Find a path from `src` to `tgt`.  `edges` takes a node label and returns
+    a list of `(node, cost)` pairs.  `heur` takes a pair of node labels and
+    returns an estimated cost to move between them."""
+    q = [(0, 0, src, None)]
+
+    parent = {}
+
+    while q:
+        f, g, cur, prev = heapq.heappop(q)
+        if cur in parent:
+            continue
+        parent[cur] = prev
+        if cur == tgt:
+            break
+
+        for (n, w) in edges(cur):
+            if n in parent:
+                continue
+            ng = g + w
+            nh = heur(n, tgt)
+            nf = ng + nh
+            heapq.heappush(q, (nf, ng, n, cur))
+
+    if tgt not in parent:
+        return None
+
+    pos = tgt
+    path = []
+    while pos != src:
+        path.append(pos)
+        pos = parent[pos]
+    path.append(src)
+    path.reverse()
+    return path
+
+
+def die(msg='the impossible happened'):
+    raise RuntimeError(msg)
