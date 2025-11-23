@@ -46,7 +46,7 @@ def print_2d_repl(padding, *dicts, constrain=(-256, -256, 256, 256)):
         points.extend([k for k, v in d[0].items() if isinstance(k, tuple)])
     from operator import itemgetter
     bounds = max(constrain[0], min(points, key=itemgetter(0))[0]), max(constrain[1], min(points, key=itemgetter(1))[1]), \
-             min(constrain[2], max(points, key=itemgetter(0))[0]), min(constrain[2], max(points, key=itemgetter(1))[1])
+             min(constrain[2], max(points, key=itemgetter(0))[0]), min(constrain[3], max(points, key=itemgetter(1))[1])
     for y in range(bounds[1], bounds[3] + 1):
         for x in range(bounds[0], bounds[2] + 1):
             c = padding
@@ -164,9 +164,9 @@ class open_default(object):
 def parselines(func=None):
     with open_default() as file:
         if func:
-            return [func(line.strip()) for line in file]
+            return [func(line.strip('\r\n')) for line in file]
         else:
-            return [line.strip() for line in file]
+            return [line.strip('\r\n') for line in file]
 
 
 def parsegrid(ignore=None):

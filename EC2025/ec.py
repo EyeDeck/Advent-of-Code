@@ -37,12 +37,16 @@ class open_default(object):
         self.file.close()
 
 
-def parse_lines(n, func=None):
-    with open_default(n) as file:
+def get_ints(s):
+    return [int(i) for i in re.findall(r'-?[0-9]+', s)]
+
+
+def parse_lines(func=None):
+    with open_default() as file:
         if func:
-            return [func(line.strip()) for line in file]
+            return [func(line.strip('\r\n')) for line in file]
         else:
-            return [line.strip() for line in file]
+            return [line.strip('\r\n') for line in file]
 
 
 def parse_double_break(n):
@@ -50,8 +54,56 @@ def parse_double_break(n):
         return file.read().split('\n\n')
 
 
-def get_ints(s):
-    return [int(i) for i in re.findall(r'-?[0-9]+', s)]
+def parse_grid(n, ignore=None):
+    grid = {}
+    inverse = defaultdict(list)
+    unique = {}
+    non_unique = set()
+
+    for y, line in enumerate(parse_lines(n)):
+        for x, c in enumerate(line):
+            if ignore is None or c not in ignore:
+                grid[x, y] = c
+
+                inverse[c].append((x, y))
+
+                if c in unique:
+                    del unique[c]
+                    non_unique.add(c)
+                elif c not in non_unique:
+                    unique[c] = (x, y)
+
+    return grid, inverse, unique
+
+
+def print_2d(padding, *dicts, constrain=(-256, -256, 256, 256)):
+    print_2d_repl(padding, *([v, {}] for v in dicts), constrain=constrain)
+
+
+def print_2d_repl(padding, *dicts, constrain=(-256, -256, 256, 256)):
+    points = []
+    for d in dicts:
+        points.extend([k for k, v in d[0].items() if isinstance(k, tuple)])
+    from operator import itemgetter
+    bounds = max(constrain[0], min(points, key=itemgetter(0))[0]), max(constrain[1], min(points, key=itemgetter(1))[1]), \
+             min(constrain[2], max(points, key=itemgetter(0))[0]), min(constrain[3], max(points, key=itemgetter(1))[1])
+    for y in range(bounds[1], bounds[3] + 1):
+        for x in range(bounds[0], bounds[2] + 1):
+            c = padding
+            for i in range(len(dicts) - 1, -1, -1):
+                d, repl = dicts[i]
+                if (x, y) in d:
+                    c = d[x, y]
+                    c = repl[c] if c in repl else str(c)
+                    c = c + padding[len(c):] if len(c) < len(padding) else c[:len(padding)]
+                    break
+            print(c, end='')
+        print()
+
+
+def grid_bounds(d):
+    return min(d, key=itemgetter(0))[0], min(d, key=itemgetter(1))[1], \
+           max(d, key=itemgetter(0))[0], max(d, key=itemgetter(1))[1]
 
 
 def vadd(a, b):
@@ -121,74 +173,6 @@ def vdistm(a, b):
     return vmagm(vsub(a, b))
 
 
-def print_2d(padding, *dicts, constrain=(-256, -256, 256, 256)):
-    print_2d_repl(padding, *([v, {}] for v in dicts), constrain=constrain)
-
-
-def print_2d_repl(padding, *dicts, constrain=(-256, -256, 256, 256)):
-    points = []
-    for d in dicts:
-        points.extend([k for k, v in d[0].items() if isinstance(k, tuple)])
-    from operator import itemgetter
-    bounds = max(constrain[0], min(points, key=itemgetter(0))[0]), max(constrain[1], min(points, key=itemgetter(1))[1]), \
-             min(constrain[2], max(points, key=itemgetter(0))[0]), min(constrain[2], max(points, key=itemgetter(1))[1])
-    for y in range(bounds[1], bounds[3] + 1):
-        for x in range(bounds[0], bounds[2] + 1):
-            c = padding
-            for i in range(len(dicts) - 1, -1, -1):
-                d, repl = dicts[i]
-                if (x, y) in d:
-                    c = d[x, y]
-                    c = repl[c] if c in repl else str(c)
-                    c = c + padding[len(c):] if len(c) < len(padding) else c[:len(padding)]
-                    break
-            print(c, end='')
-        print()
-
-
-def grid_bounds(d):
-    return min(d, key=itemgetter(0))[0], min(d, key=itemgetter(1))[1], \
-           max(d, key=itemgetter(0))[0], max(d, key=itemgetter(1))[1]
-
-
-def parse_grid(n, ignore=None):
-    grid = {}
-    inverse = defaultdict(list)
-    unique = {}
-    non_unique = set()
-
-    for y, line in enumerate(parse_lines(n)):
-        for x, c in enumerate(line):
-            if ignore is None or c not in ignore:
-                grid[x, y] = c
-
-                inverse[c].append((x, y))
-
-                if c in unique:
-                    del unique[c]
-                    non_unique.add(c)
-                elif c not in non_unique:
-                    unique[c] = (x, y)
-
-    return grid, inverse, unique
-
-
-HEXDIRS = [
-    (0, 1, -1),
-    (-1, 1, 0),
-    (-1, 0, 1),
-    (0, -1, 1),
-    (1, -1, 0),
-    (1, 0, -1),
-]
-
-
-def hexdist(a, b):
-    x1, y1, z1 = a
-    x2, y2, z2 = b
-    return (abs(x1 - x2) + abs(y1 - y2) + abs(z1 - z2)) // 2
-
-
 # starting from east, running ccw
 DIRS = [
     (1, 0),
@@ -207,6 +191,21 @@ DIAGDIRS = [
     (0, 1),
     (1, 1),
 ]
+
+HEXDIRS = [
+    (0, 1, -1),
+    (-1, 1, 0),
+    (-1, 0, 1),
+    (0, -1, 1),
+    (1, -1, 0),
+    (1, 0, -1),
+]
+
+
+def hexdist(a, b):
+    x1, y1, z1 = a
+    x2, y2, z2 = b
+    return (abs(x1 - x2) + abs(y1 - y2) + abs(z1 - z2)) // 2
 
 
 def bfs(src, tgt, neighbors):
