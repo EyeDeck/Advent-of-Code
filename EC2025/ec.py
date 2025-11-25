@@ -41,8 +41,8 @@ def get_ints(s):
     return [int(i) for i in re.findall(r'-?[0-9]+', s)]
 
 
-def parse_lines(func=None):
-    with open_default() as file:
+def parse_lines(n, func=None):
+    with open_default(n) as file:
         if func:
             return [func(line.strip('\r\n')) for line in file]
         else:
