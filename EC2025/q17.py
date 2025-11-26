@@ -1,15 +1,18 @@
+import math
+
 from ec import *
 
 
 def test_cell(Xv, Yv, Xc, Yc, R):
+    # using the function from the puzzle description verbatim
     return (Xv - Xc) * (Xv - Xc) + (Yv - Yc) * (Yv - Yc) <= R * R
 
 
 def get_cells(center, r):
-    vX, vY = center
+    v_x, v_y = center
     cells = set()
-    for x in range(vX - r, vX + r + 1):
-        for y in range(vY - r, vY + r + 1):
+    for x in range(v_x - r, v_x + r + 1):
+        for y in range(v_y - r, v_y + r + 1):
             if test_cell(*center, x, y, r):
                 cells.add((x, y))
     return cells
@@ -19,7 +22,9 @@ def p1():
     grid, inverse, unique = parse_grid(1)
     volcano = unique['@']
     eruption_mask = get_cells(volcano, 10)
-    print_2d('.', {k: grid[k] for k in eruption_mask})
+    if verbose:
+        print(f'part 1 circle:')
+        print_2d('.', {k: grid[k] for k in eruption_mask})
     return sum(int(grid[c]) for c in eruption_mask - {volcano, })
 
 
@@ -40,32 +45,8 @@ def p2():
     return max_destruction * max_index
 
 
-dirs = {
-    'R': (1, 0),
-    'U': (0, -1),
-    'L': (-1, 0),
-    'D': (0, 1),
-}
-
-
-def get_quadrant_dirs(center, pos):
-    cX, cY = center
-    pX, pY = pos
-    if pX < cX:
-        if pY < cY:  # top left
-            return [dirs['L'], dirs['D']]
-        else:  # top right
-            return [dirs['L'], dirs['U']]
-    else:
-        if pY < cY:  # bottom left
-            return [dirs['D'], dirs['R']]
-        else:  # bottom right
-            return [dirs['U'], dirs['R']]
-
-
 def wbfs(src, tgt, edges, nodes, blocked_nodes):
-    """Find a path from `src` to `tgt`.  `edges` takes a node label and returns
-    a list of `(node, cost)` pairs."""
+    # modified from library version to return cost, so I don't have to recalc it
     q = [(0, src, None)]
 
     cost = 0
@@ -106,83 +87,6 @@ def get_neighbors(pos, nodes, blocked_nodes):
     return n
 
 
-# def p3():
-#     grid, inverse, unique = parse_grid(3)
-#
-#     volcano = unique['@']
-#     start = unique['S']
-#     bounds = grid_bounds(grid)
-#
-#     volcano_cost = {k:int(v) for k,v in grid.items() if v.isnumeric()}
-#     volcano_cost[start] = 0
-#     left_slice = {(x,volcano[1]):0 for x in range(volcano[0]-1, -1, -1)}
-#     down_slice = {(volcano[0],y):0 for y in range(volcano[1]+1, bounds[3]+1)}
-#     right_slice = {(x,volcano[1]):0 for x in range(volcano[0]+1, bounds[2]+1)}
-#
-#     a_list = bresenham(volcano[0]-1, volcano[1], 0, bounds[3])
-#     b_list = bresenham(volcano[0]+1, volcano[1], bounds[2], bounds[3])
-#
-#     print((0, bounds[3]), (volcano[0]-1, volcano[1]), a_list)
-#     print((volcano[0]+1, volcano[1]), (bounds[2], bounds[3]), b_list)
-#
-#     print_2d('.', grid, {k:'A' for k in a_list}, {k:'B' for k in b_list}) # , {k:'C' for k in c_list})
-#
-#     print(volcano, a_list)
-#     print(bounds)
-#
-#
-#
-#     print(wbfs(start, vadd(volcano,(-1,-1)), get_neighbors, INF))
-#
-#     # print(
-#     #     wbfs(start, (7, 3), get_neighbors, INF),
-#     #     wbfs((7,3), vadd(volcano,(-1,-1)), get_neighbors, INF)
-#     # )
-#
-#     for radius in range(5, vdistm(volcano, start)):
-#         impassable = get_cells(volcano, radius)
-#         for c in impassable:
-#             volcano_cost.pop(c, None)
-#         print(f'checking radius {radius}, remaining volcano cells {len(volcano_cost)}')
-#         for a in a_list:
-#             if a in impassable:
-#                 continue
-#             result = wbfs(start, a, get_neighbors, radius*30)
-#             if result is None:
-#                 # print(f'no path from {start} to {a} at radius {radius}')
-#                 continue
-#             cost_to_a, path_to_a = result
-#
-#             print(f'{start} to {a} at radius {radius} = {cost_to_a}')
-#
-#             for b in b_list:
-#                 if b in impassable:
-#                     continue
-#                 result = wbfs(a, b, get_neighbors, (radius * 30) - cost_to_a)
-#                 if result is None:
-#                     # print(f'no path from {start} to {a} at radius {radius}')
-#                     continue
-#                 cost_to_b, path_to_b = result
-#
-#                 result = wbfs(b, start, get_neighbors, (radius * 30) - (cost_to_a + cost_to_b))
-#                 if result is None:
-#                     continue
-#                 print('found path!!')
-#                 cost_to_start, path_to_start = result
-#
-#                 print_2d('.',
-#                          volcano_cost,
-#                          {k: 'A' for k in path_to_a},
-#                          {k: 'B' for k in path_to_b},
-#                          {k: 'C' for k in path_to_start}
-#                          )
-#
-#                 return cost_to_a, cost_to_b, cost_to_start, (cost_to_a + cost_to_b + cost_to_start), radius, (cost_to_a + cost_to_b + cost_to_start) * radius
-#
-#
-#     return
-
-
 def p3():
     grid, inverse, unique = parse_grid(3)
 
@@ -190,111 +94,34 @@ def p3():
     start = unique['S']
     bounds = grid_bounds(grid)
 
-    volcano_cost = {k: int(v) for k, v in grid.items() if v.isnumeric()}
-    volcano_cost[start] = 0
-    left_slice = {(x, volcano[1]): 0 for x in range(volcano[0] - 1, -1, -1)}
-    down_slice = {(volcano[0], y): 0 for y in range(volcano[1] + 1, bounds[3] + 1)}
-    right_slice = {(x, volcano[1]): 0 for x in range(volcano[0] + 1, bounds[2] + 1)}
+    vector = vsub(start, volcano)
+    length = math.hypot(*vector)
+    unit = vdiv(vector, (length)*2)
+    max_side_len = max(bounds[1:])
+    seg_len = max_side_len * math.sqrt(2)
 
-    a_list = bresenham(volcano[0] - 1, volcano[1], 0, bounds[3])
-    b_list = bresenham(volcano[0] + 1, volcano[1], bounds[2], bounds[3])
+    offset = tuple(round(f) for f in vmul(unit, (seg_len,)*2))
+    opposite_point = vsub(volcano, offset)
+    left_point = vadd(volcano, (offset[1], -offset[0]))
+    right_point = vadd(volcano, (-offset[1], offset[0]))
 
-    print((0, bounds[3]), (volcano[0] - 1, volcano[1]), a_list)
-    print((volcano[0] + 1, volcano[1]), (bounds[2], bounds[3]), b_list)
+    down_slice = tuple(c for c in bresenham(volcano, opposite_point) if c in grid)
+    left_slice = tuple(c for c in bresenham(volcano, left_point) if c in grid)
+    right_slice = tuple(c for c in bresenham(volcano, right_point) if c in grid)
 
-    # print_2d('.', grid, {k: 'A' for k in a_list}, {k: 'B' for k in b_list})  # , {k:'C' for k in c_list})
-
-    print(volcano, a_list)
-    print(bounds)
-
-    # print(wbfs(start, vadd(volcano, (-1, -1)), get_neighbors, INF))
-
-    # print(
-    #     wbfs(start, (7, 3), get_neighbors, INF),
-    #     wbfs((7,3), vadd(volcano,(-1,-1)), get_neighbors, INF)
-    # )
-
-    print_2d(' ', {k:'.' for k in get_cells(volcano, 1)})
-
-    for radius in range(1, vdistm(volcano, start)):
-        impassable = get_cells(volcano, radius)
-        for c in impassable:
-            volcano_cost.pop(c, None)
-        print(f'checking radius {radius}, remaining volcano cells {len(volcano_cost)}')
-        for a in down_slice:
-            if a in impassable:
-                continue
-            result = wbfs(start, a, get_neighbors, volcano_cost, right_slice, radius * 30)
-            if result is None:
-                # print(f'no path from {start} to {a} at radius {radius}')
-                continue
-            cost_to_a, path_to_a = result
-
-            print(f'{start} to {a} at radius {radius} = {cost_to_a}')
-            print_2d(' ', {k:'.' for k in impassable}, {k:volcano_cost[k] for k in path_to_a})
-
-            result = wbfs(a, start, get_neighbors, volcano_cost, left_slice, radius * 30 - cost_to_a)
-            print(f'remaining cost: {radius * 30 - cost_to_a}')
-
-            if result is None:
-                print(f'no path from {start} to {a} at radius {radius}')
-                continue
-            cost_to_start, path_to_start = result
-
-            print('found path!!')
-
-            print_2d('.',
-                     volcano_cost,
-                     {k: 'A' for k in path_to_a},
-                     # {k: 'B' for k in path_to_b},
-                     {k: 'C' for k in path_to_start}
-                     )
-
-            return cost_to_a, cost_to_start, (cost_to_a + cost_to_start), radius, (cost_to_a + cost_to_start) * (radius)
-
-    return
-
-
-
-def p3():
-    grid, inverse, unique = parse_grid(3)
-
-    volcano = unique['@']
-    start = unique['S']
-    bounds = grid_bounds(grid)
+    if verbose:
+        print('line segments:')
+        print_2d('.', grid, {k: '<' for k in left_slice}, {k: 'v' for k in down_slice}, {k:'>' for k in right_slice})
 
     volcano_cost = {k: int(v) for k, v in grid.items() if v.isnumeric()}
     volcano_cost[start] = 0
-    left_slice = {(x, volcano[1]): 0 for x in range(volcano[0] - 1, -1, -1)}
-    down_slice = {(volcano[0], y): 0 for y in range(volcano[1] + 1, bounds[3] + 1)}
-    right_slice = {(x, volcano[1]): 0 for x in range(volcano[0] + 1, bounds[2] + 1)}
-
-    a_list = bresenham(volcano[0] - 1, volcano[1], 0, bounds[3])
-    b_list = bresenham(volcano[0] + 1, volcano[1], bounds[2], bounds[3])
-
-    print((0, bounds[3]), (volcano[0] - 1, volcano[1]), a_list)
-    print((volcano[0] + 1, volcano[1]), (bounds[2], bounds[3]), b_list)
-
-    # print_2d('.', grid, {k: 'A' for k in a_list}, {k: 'B' for k in b_list})  # , {k:'C' for k in c_list})
-
-    print(volcano, a_list)
-    print(bounds)
-
-    # print(wbfs(start, vadd(volcano, (-1, -1)), get_neighbors, INF))
-
-    # print(
-    #     wbfs(start, (7, 3), get_neighbors, INF),
-    #     wbfs((7,3), vadd(volcano,(-1,-1)), get_neighbors, INF)
-    # )
-
-    print_2d(' ', {k:'.' for k in get_cells(volcano, 1)})
 
     radius = 0
-    last_cost = -1
     impassable = {}
 
     while True:
-        print('working on radius {radius}')
+        if verbose:
+            print(f'working on radius {radius}')
         lowest_cost = INF
         shortest_path = None
 
@@ -304,52 +131,45 @@ def p3():
 
             result = wbfs(start, a, get_neighbors, volcano_cost, right_slice)
             if result is None:
-                # print(f'no path from {start} to {a} at radius {radius}')
                 continue
             cost_to_a, path_to_a = result
 
-            # print(f'{start} to {a} at radius {radius} = {cost_to_a}')
-            # print_2d(' ', {k:'.' for k in impassable}, {k:volcano_cost[k] for k in path_to_a})
-
             result = wbfs(a, start, get_neighbors, volcano_cost, left_slice)
             if result is None:
-                # print(f'no path from {start} to {a} at radius {radius}')
                 continue
             cost_to_start, path_to_start = result
             total_cost = cost_to_a + cost_to_start
             whole_path = path_to_a + path_to_start
-            # print(f'minimum loop cost: {total_cost}')
 
-            # print(lowest_cost)
             if total_cost < lowest_cost:
                 lowest_cost = total_cost
                 shortest_path = whole_path
 
         if lowest_cost != INF:
-            print_2d('.',volcano_cost, {k: '-' for k in whole_path} )
+            if verbose:
+                print(f'shortest path at volcano radius {radius}:')
+                print_2d('.',volcano_cost, {k: '-' for k in shortest_path} )
 
-            radius = (lowest_cost) // 30
+            last_radius = radius
+            radius = lowest_cost // 30
+            if radius == last_radius:
+                if verbose:
+                    print(f'found valid path of cost {lowest_cost} at radius {radius}!')
+                return radius * lowest_cost
+            else:
+                if verbose:
+                    print(f'shortest path cost {lowest_cost} so increased next radius to {radius}')
 
             impassable = get_cells(volcano, radius)
             for c in impassable:
                 volcano_cost.pop(c, None)
-
-            if shortest_path:
-                for c in shortest_path:
-                    if c in impassable:
-                        break
-                else:
-                    return radius, lowest_cost, radius * lowest_cost
         else:
-            radius += 1
-        # print(f'checking radius {radius}, remaining volcano cells {len(volcano_cost)}')
-
-
-    return
+            print(f'could not find path at radius {radius}')
+            return -1
 
 
 setquest(17)
 
-# print('part1:', p1())
-# print('part2:', p2())
+print('part1:', p1())
+print('part2:', p2())
 print('part3:', p3())

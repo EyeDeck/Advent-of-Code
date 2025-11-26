@@ -24,7 +24,8 @@ def setquest(n):
 
 class open_default(object):
     def __init__(self, n):
-        if len(sys.argv) > 1 and sys.argv[1][1] != '-':
+        # todo: make a better system for loading non-default input files
+        if False and len(sys.argv) > 1 and sys.argv[1][1] != '-':
             self.fn = sys.argv[1]
         else:
             self.fn = f'q{_QUEST}_{n}.txt'
@@ -311,11 +312,13 @@ def die(msg='the impossible happened'):
     raise RuntimeError(msg)
 
 
-def bresenham(x0, y0, x1, y1):
+def bresenham(a, b):
     """
-    Generates a list of pixel coordinates that form a line between two points
-    (x0, y0) and (x1, y1) using Bresenham's line algorithm.
+    Make a list of coordinates in a line from a to b using Bresenham's line algorithm
     """
+    x0, y0 = a
+    x1, y1 = b
+
     points = []
     dx = abs(x1 - x0)
     dy = abs(y1 - y0)
