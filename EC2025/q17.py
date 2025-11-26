@@ -45,37 +45,43 @@ def p2():
     return max_destruction * max_index
 
 
-def wbfs(src, tgt, edges, nodes, blocked_nodes):
+def wbfs(q, tgt, edges, nodes, blocked_nodes):
     # modified from library version to return cost, so I don't have to recalc it
-    q = [(0, src, None)]
 
-    cost = 0
+    src = {t[1] for t in q}
     parent = {}
 
     while q:
         cost, cur, prev = heapq.heappop(q)
         if cur in parent:
             continue
-        parent[cur] = prev
-        if cur == tgt:
-            break
+        parent[cur] = (prev, cost)
+        if cur in tgt:
+            if all(n in parent for n in tgt):
+                break
 
         for (n, ncost) in edges(cur, nodes, blocked_nodes):
             if n in parent:
                 continue
             heapq.heappush(q, (cost + ncost, n, cur))
 
-    if tgt not in parent:
+    if not any(n in parent for n in tgt):
         return None
 
-    pos = tgt
-    path = []
-    while pos != src:
+    paths = {}
+    for start in tgt:
+        pos = start
+        if pos not in parent:
+            continue
+        path = []
+        while pos not in src:
+            path.append(pos)
+            pos, _ = parent[pos]
         path.append(pos)
-        pos = parent[pos]
-    path.append(src)
-    path.reverse()
-    return cost, path
+        path.append(parent[start][1])
+        path.reverse()
+        paths[start] = path
+    return paths
 
 
 def get_neighbors(pos, nodes, blocked_nodes):
@@ -122,50 +128,44 @@ def p3():
     while True:
         if verbose:
             print(f'working on radius {radius}')
-        lowest_cost = INF
-        shortest_path = None
 
-        for a in down_slice:
-            if a in impassable:
-                continue
+        targets = {a for a in down_slice if a not in impassable}
 
-            result = wbfs(start, a, get_neighbors, volcano_cost, right_slice)
-            if result is None:
-                continue
-            cost_to_a, path_to_a = result
+        s_to_mid = wbfs([(0, start, None)], targets, get_neighbors, volcano_cost, right_slice)
 
-            result = wbfs(a, start, get_neighbors, volcano_cost, left_slice)
-            if result is None:
-                continue
-            cost_to_start, path_to_start = result
-            total_cost = cost_to_a + cost_to_start
-            whole_path = path_to_a + path_to_start
-
-            if total_cost < lowest_cost:
-                lowest_cost = total_cost
-                shortest_path = whole_path
-
-        if lowest_cost != INF:
-            if verbose:
-                print(f'shortest path at volcano radius {radius}:')
-                print_2d('.',volcano_cost, {k: '-' for k in shortest_path} )
-
-            last_radius = radius
-            radius = lowest_cost // 30
-            if radius == last_radius:
-                if verbose:
-                    print(f'found valid path of cost {lowest_cost} at radius {radius}!')
-                return radius * lowest_cost
-            else:
-                if verbose:
-                    print(f'shortest path cost {lowest_cost} so increased next radius to {radius}')
-
-            impassable = get_cells(volcano, radius)
-            for c in impassable:
-                volcano_cost.pop(c, None)
-        else:
-            print(f'could not find path at radius {radius}')
+        if s_to_mid is None:
             return -1
+
+        mid_to_s_start = [(v[0], k, None) for k,v in s_to_mid.items()]
+        heapq.heapify(mid_to_s_start)
+
+        mid_to_s = wbfs(mid_to_s_start, {start,}, get_neighbors, volcano_cost, left_slice)
+        if mid_to_s is None:
+            continue
+
+        _, result = mid_to_s.popitem()
+        lowest_cost = result[0]
+        shortest_path = result[1:]
+        # print(shortest_path)
+
+        if verbose:
+            shortest_path = s_to_mid[shortest_path[0]][1:] + shortest_path
+            print(f'shortest path at volcano radius {radius}:')
+            print_2d('.',volcano_cost, {k: '-' for k in shortest_path} )
+
+        last_radius = radius
+        radius = lowest_cost // 30
+        if radius == last_radius:
+            if verbose:
+                print(f'found valid path of cost {lowest_cost} at radius {radius}!')
+            return radius * lowest_cost
+        else:
+            if verbose:
+                print(f'shortest path cost {lowest_cost} so increased next radius to {radius}')
+
+        impassable = get_cells(volcano, radius)
+        for c in impassable:
+            volcano_cost.pop(c, None)
 
 
 setquest(17)
