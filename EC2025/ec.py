@@ -338,3 +338,45 @@ def bresenham(a, b):
             err += dx
             y0 += sy
     return points
+
+
+def merge_ranges(ranges):
+    """merges list of overlapping or adjacent ranges
+    ranges are inclusive tuples, e.g. [(1,3),(4,6),(8,10)] -> [(1,6),(8,10)]"""
+    ranges = sorted(ranges, key=lambda x: x[0])
+    merged = []
+    a_start, a_end = ranges[0]
+    for b_start, b_end in ranges[1:]:
+        if b_start <= a_end + 1:
+            a_end = max(a_end, b_end)
+        else:
+            merged.append((a_start, a_end))
+            a_start, a_end = b_start, b_end
+    merged.append((a_start, a_end))
+    return merged
+
+
+def intersect_ranges(a, b, normalize=True):
+    """return list of intersections of two lists of ranges
+    e.g. a=[(0,3), (5,6), (8,10)], b=[(1,1), (3,4), (6,9)] -> [(1,1),(3,3),(6,6),(8,9)]"""
+    if normalize:
+        a = merge_ranges(a)
+        b = merge_ranges(b)
+
+    i, j = 0, 0
+    out = []
+    while i < len(a) and j < len(b):
+        a_start, a_end = a[i]
+        b_start, b_end = b[j]
+        start = max(a_start, b_start)
+        end = min(a_end, b_end)
+        if start <= end:
+            out.append((start, end))
+        if a_end < b_end:
+            i += 1
+        elif a_end > b_end:
+            j += 1
+        else:
+            i += 1
+            j += 1
+    return out

@@ -1,77 +1,62 @@
 from ec import *
 
 
-def wbfs(src, tgt, edges):
-    """Find a path from `src` to `tgt`.  `edges` takes a node label and returns
-            a list of `(node, cost)` pairs.
-    modified from library version to return cost, so I don't have to recalc it
-    """
-    q = [(0, src, None)]
-
-    parent = {}
-
-    while q:
-        cost, cur, prev = heapq.heappop(q)
-        if cur in parent:
-            continue
-        parent[cur] = (prev, cost)
-        if cur in tgt:
-            return cost
-
-        for (n, ncost) in edges(cur):
-            if n in parent:
-                continue
-            heapq.heappush(q, (cost + ncost, n, cur))
-
-    return None
-
-
 def solve(n):
     data = parse_lines(n, get_ints)
-    board = defaultdict(set)
+    board = defaultdict(list)
     start = (0, 0)
 
     for line in data:
-        ahead, low, opening = line
-        x = ahead
-        for y in range(low, low + opening):
-            board[x].add(y)
+        x, low, opening = line
+        min_y = low
+        max_y = low + opening - 1
 
-    printable = set()
-    for x, ys in board.items():
-        for y in ys:
-            printable.add((x,y))
+        # trim parts of ranges that are inaccessible (on the wrong part of the checkerboard)
+        if min_y & 1 != x & 1:
+            min_y += 1
+        if max_y & 1 != x & 1:
+            max_y -= 1
 
-    # print_2d('.', {k: '#' for k in printable}, {(0, 0): 'S'})
+        if min_y > max_y:
+            continue
+
+        board[x].append((min_y, max_y))
+
+    for k in board.keys():
+        board[k] = merge_ranges(board[k])
 
     cur = 0
-    next_column = {}
+    next_columns = {}
     for x in board:
-        next_column[cur] = x
+        next_columns[cur] = x
         cur = x
 
-    def get_neighbors(pos):
-        n = []
+    cur_x = 0
+    cur_ranges = [start]
+    acc = 0
+    while cur_x in next_columns:
+        next_x = next_columns[cur_x]
+        projections = []
 
-        in_x, in_y = pos
-        nc = next_column[in_x]
-        dist = nc - in_x
-        odd = nc & 1
-        for y in board[nc]:
-            if not ((y & 1) if odd else (y & 1 == 0)):
-                continue
-            if not (abs(y - in_y) <= dist):
-                continue
-            cost = (dist - (in_y - y)) // 2
-            n.append(((nc, y), cost))
-        return n
+        dist = next_x - cur_x
+        for y_range in cur_ranges:
+            y_min, y_max = y_range
+            next_min = max(0, y_min - dist)
+            next_max = y_max + dist
+            # print(y_range, 'projects to', next_min, next_max, 'on', next_x)
+            projections.append([next_min, next_max])
 
-    target_coords = {(x,y) for y in board[max(board.keys())]}
-    return wbfs(start, target_coords, get_neighbors)
+        next_ranges = intersect_ranges(projections, board[next_x])
+        acc += (next_ranges[0][0] - cur_ranges[0][0]) + dist
+
+        cur_x = next_x
+        cur_ranges = next_ranges
+
+    return acc // 2
 
 
 setquest(19)
 
-print('part1:', solve(1))
-print('part2:', solve(2))
+print('part3:', solve(1))
+print('part3:', solve(2))
 print('part3:', solve(3))
