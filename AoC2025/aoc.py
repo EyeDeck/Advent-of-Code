@@ -35,6 +35,8 @@ nth = lambda n: lambda x: x[n]
 memo = lru_cache(maxsize=None)
 memo1m = lru_cache(maxsize=2 ** 20)
 
+verbose = '-v' in sys.argv or '--verbose' in sys.argv
+
 
 def print_2d(padding, *dicts, constrain=(-256, -256, 256, 256)):
     print_2d_repl(padding, *([v, {}] for v in dicts), constrain=constrain)
