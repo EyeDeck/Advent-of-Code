@@ -32,18 +32,19 @@ def p2():
     return None
 
 
-setday(0)
+if __name__ == '__main__':
+    setday(0)
 
-data = parselines()
-# data = parselines(get_ints)
-# grid, inverse, unique = parsegrid()
+    data = parselines()
+    # data = parselines(get_ints)
+    # grid, inverse, unique = parsegrid()
 
-# with open_default() as file:
-#     data = get_ints(file.read())
+    # with open_default() as file:
+    #     data = get_ints(file.read())
 
-verbose = '-v' in sys.argv or '--verbose' in sys.argv
+    verbose = '-v' in sys.argv or '--verbose' in sys.argv
 
-print('part1:', p1() )
-print('part2:', p2() )
+    print('part1:', p1() )
+    print('part2:', p2() )
 
-# print('part1: %d\npart2: %d' % solve())
+    # print('part1: %d\npart2: %d' % solve())

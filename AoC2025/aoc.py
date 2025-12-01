@@ -1,6 +1,6 @@
 # 193354 posted his library one time, so I copied the entire thing
 # I've since edited it a fair bit, but credit still goes to that good lad
-
+import math
 import string
 from collections import deque, defaultdict
 import heapq
@@ -625,3 +625,19 @@ def intersect_ranges(a, b, normalize=True):
             i += 1
             j += 1
     return out
+
+
+def is_prime(n):
+    """Returns whether n is prime or not"""
+    if n <= 1:
+        return False
+    if n == 2:
+        return True
+    if n % 2 == 0:
+        return False
+
+    for i in range(3, int(math.sqrt(n)) + 1, 2):
+        if n % i == 0:
+            return False
+    return True
+
