@@ -23,6 +23,8 @@ def solve(n):
         bins[k] += 1
 
     for i in range(n):
+        if verbose:
+            print(f'After {i+1} blink{"s" if i != 1 else ""}:\n{bins}')
         bins = tick(bins)
 
     return sum(bins.values())
@@ -32,6 +34,8 @@ setday(11)
 
 with open_default() as file:
     data = get_ints(file.read())
+
+verbose = '-v' in sys.argv or '--verbose' in sys.argv
 
 print('part1:', solve(25))
 print('part2:', solve(75))

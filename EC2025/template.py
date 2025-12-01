@@ -5,22 +5,20 @@ def p1():
     data = parse_lines(1)
     # data = parse_lines(1, get_ints)
     # data = parse_double_break(1)
+    # grid, inverse, unique = parse_grid()
 
     return
 
 
 def p2():
     data = parse_lines(2)
-    # data = parse_lines(2, get_ints)
-    # data = parse_double_break(2)
+
 
     return
 
 
 def p3():
     data = parse_lines(3)
-    # data = parse_lines(3, get_ints)
-    # data = parse_double_break(3)
 
     return
 
