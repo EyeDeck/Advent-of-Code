@@ -16,9 +16,8 @@ def p1():
 
 
 def p2():
-    merged_ranges = merge_ranges(ranges)
     acc = 0
-    for l, r in merged_ranges:
+    for l, r in ranges:
         acc += r-l + 1
     return acc
 
@@ -31,6 +30,7 @@ if __name__ == '__main__':
 
     ranges_raw, available_raw = data.split('\n\n')
     ranges = [tuple(int(s) for s in line.split('-')) for line in ranges_raw.split('\n')]
+    ranges = merge_ranges(ranges)
     available = [int(line) for line in available_raw.split('\n')]
 
     print('part1:', p1() )
