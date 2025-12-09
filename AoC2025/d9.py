@@ -24,67 +24,73 @@ def p2():
     def decompress(c):
         return cmp_to_x[c[0]], cmp_to_y[c[1]]
 
+    # apply coordinate compression so we can handle this with discrete tiles in a reasonable time (and not mess with ranges)
+    # the entire grid fits in ~250x250 this way
     data_cmp = [compress(c) for c in data]
 
+    # map out the entire border wall in memory, as well as a set containing inner and outer outlines of the border wall
     bounds = set()
+    outset = set()
     for i in range(len(data_cmp) - 1, -1, -1):
         a, b = data_cmp[i], data_cmp[i - 1]
-        bounds |= set(p for p in bresenham(a, b))
+        segment = set(p for p in bresenham(a, b))
+        bounds |= segment
+        outset |= {vadd(o, point) for o in DIAGDIRS for point in segment}
+    outset -= bounds
 
-    bottom_right = max(data_cmp, key=lambda x: x[0] * x[1])
-    search_line = bresenham((-1, -1), bottom_right)
-
-    outside_point = None
-    for i in range(len(search_line)):
-        if search_line[i] in bounds:
-            outside_point = search_line[i - 1]
-            break
-
-    expanded = set()
-    for point in bounds:
-        expanded |= {vadd(o, point) for o in DIAGDIRS}
-
-    forbidden_zone = {outside_point}
-    frontier = {outside_point}
+    # flood fill from an arbitrary point in 'outset'; this will randomly either find the inner or outer wall
+    random_point = outset.pop()
+    flood_set = {random_point}
+    frontier = {random_point}
     while frontier:
         point = frontier.pop()
-        n = [vadd(o, point) for o in DIAGDIRS]
-        n = {p for p in n if p in expanded and p not in forbidden_zone and p not in bounds}
+        n = [vadd(o, point) for o in DIRS]
+        n = {p for p in n if p in outset and p not in flood_set}
         frontier |= n
-        forbidden_zone |= n
+        flood_set |= n
+    outset -= flood_set
+    # the outer wall is the longer of the two sets, and also the only one we care about
+    forbidden_zone = min([outset, flood_set], key=len)
 
     scale = 1 if '-s' not in sys.argv else int(sys.argv[sys.argv.index('-s') + 1])
 
     if verbose:
         print_2d(
             '  ',
-            {tuple(x // scale for x in k): '.' for k in expanded},
+            {tuple(x // scale for x in k): '.' for k in outset},
             {tuple(x // scale for x in k): '+' for k in forbidden_zone},
             {tuple(x // scale for x in k): '#' for k in bounds},
             # {tuple(x // scale for x in k): '~' for k in search_line},
-            {tuple(x // scale for x in outside_point): '@'}
+            {tuple(x // scale for x in random_point): '@'}
         )
 
     def get_inside(a, b):
         #  x1 y1 -> x2 y1 -> x2 y2 -> x1 y2 -> x1 y1
         corners = [a, (b[0], a[1]), b, (a[0], b[1])]
         for i in range(3, -1, -1):
-            line = set(x for x in bresenham(corners[i], corners[i - 1]))
+            line = set(bresenham(corners[i], corners[i - 1]))
             if not line.isdisjoint(forbidden_zone):
                 return False
         return True
 
+    # perform a riffle shuffle so we test alternating points earlier (results in a ~20% speed boost on my input)
+    data_cmp = [data_cmp[i // 2 + i % 2 * (len(data_cmp) // 2)] for i in range(len(data_cmp))][:-1] + data_cmp[-1:]
+
+    # now just bruteforce every pair of points
     best = 0
     for i, a in enumerate(data_cmp):
         if verbose:
             print(i, best, end='\r')
-        for j, b in enumerate(data_cmp[i + 1:]):
-            if not get_inside(a, b):
-                continue
+        for b in data_cmp[i + 1:]:
+            # calculate the area these two points would cover, using their decompressed coordinates
             a_real, b_real = decompress(a), decompress(b)
             w = abs(a_real[0] - b_real[0]) + 1
             h = abs(a_real[1] - b_real[1]) + 1
-            best = max(w * h, best)
+            area = w * h
+            # if the area is smaller than the previous best, skip it early
+            # otherwise, just generate all 4 line segments, and see if any point in them intersects with the ~forbidden zone~
+            if area > best and get_inside(a, b):
+                best = max(w * h, best)
 
     return best
 
@@ -92,7 +98,7 @@ def p2():
 if __name__ == '__main__':
     setday(9)
 
-    data = parselines(lambda x: tuple(get_ints(x)))
+    data = parselines(get_ints)
 
     print('part1:', p1())
     print('part2:', p2())
