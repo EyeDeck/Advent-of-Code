@@ -4,33 +4,35 @@ import z3
 
 
 def p1():
+
+    @memo
+    def get_bit_order(n):
+        x = [i for i in range(1, 2 ** n)]
+        x.sort(key=int.bit_count)
+        return x
+
     acc = 0
     for line in data:
         sp = line.split()
         indicator = sum((1 if s == '#' else 0) << i for i, s in enumerate(sp[0].strip('[]')))
         buttons = [sum(1 << i for i in get_ints(s)) for s in sp[1:-1]]
+        b_len = len(buttons)
 
         if verbose:
             print(f'\nTarget: {bin(indicator)}\nXOR values: {[bin(i) for i in buttons]}')
 
-        best = INF
-        for i in range(1, 2 ** len(buttons)):
-            split_bin = [int(s) for s in bin(i)[2:].zfill(len(buttons))]
-
-            toggles = [buttons[b_i] for b_i, to_press in enumerate(split_bin) if to_press == 1]
-
+        best = 0
+        for button_bitmask in get_bit_order(b_len):
             state = 0
-            for i in toggles:
-                state ^= i
+            for i in range(b_len+1):
+                if (1 << i) & button_bitmask:
+                    state ^= buttons[i]
 
             if state == indicator:
-                press_ct = sum(split_bin)
-                best = min(best, press_ct)
+                best = button_bitmask.bit_count()
                 if verbose:
-                    print(f'\tValid: {split_bin} = {press_ct} press{"es" if press_ct > 1 else ""}')
-
-        if verbose:
-            print(f'Best: {best} press{"es" if best > 1 else ""}')
+                    print(f'Best: {button_bitmask} = {best} press{"es" if best > 1 else ""}')
+                break
 
         acc += best
 
