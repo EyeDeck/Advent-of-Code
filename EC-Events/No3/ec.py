@@ -83,6 +83,7 @@ def print_2d(padding, *dicts, constrain=(-256, -256, 256, 256)):
 
 def print_2d_repl(padding, *dicts, constrain=(-256, -256, 256, 256)):
     points = []
+    buffer = []
     for d in dicts:
         points.extend([k for k, v in d[0].items() if isinstance(k, tuple)])
     from operator import itemgetter
@@ -98,8 +99,9 @@ def print_2d_repl(padding, *dicts, constrain=(-256, -256, 256, 256)):
                     c = repl[c] if c in repl else str(c)
                     c = c + padding[len(c):] if len(c) < len(padding) else c[:len(padding)]
                     break
-            print(c, end='')
-        print()
+            buffer.append(c)
+        buffer.append('\n')
+    print(''.join(buffer), end='', flush=True)
 
 
 def grid_bounds(d):
