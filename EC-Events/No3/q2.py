@@ -64,6 +64,7 @@ def p2():
             print_2d(' ', {k: '+' for k in visited}, {pos: '@', tgt: '#'})
             print()
 
+
 # import time
 def p3():
     grid, inverse, unique = parse_grid(3)
@@ -138,16 +139,15 @@ def p3():
         visited.add(pos)
         step += 1
 
-        to_check = [c for x in DIAGDIRS if (c:=vadd(x, pos)) not in visited]
+        to_check = [c for x in DIAGDIRS if (c := vadd(x, pos)) not in visited]
         to_skip = set()
-        # print(to_check)
 
         for neighbor in to_check:
             if neighbor in to_skip:
                 continue
 
             flood_result, flood_visited = try_flood_fill(neighbor, visited)
-            # print(neighbor, flood_result, flood_visited)
+
             if flood_result:
                 visited |= flood_visited
 
