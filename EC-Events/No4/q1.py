@@ -52,6 +52,7 @@ def p3():
     for line in data:
         # print(line)
         visited = set()
+        max_visited = 0
 
         direction = False  # false = down, true = up
         blocked_ranges_up = []
@@ -80,7 +81,7 @@ def p3():
                 cur = cur + i
                 while cur in visited:
                     cur += 1
-                for _ in range(500):
+                while cur < (max_visited + i + 1):
                     if intersects_any_range(last, cur):
                         cur += 1
                     else:
@@ -89,14 +90,13 @@ def p3():
                     cur = last
 
             if cur != last:
+                max_visited = max(max_visited, cur)
                 current_range().append(sorted([last, cur]))
                 all_ranges.append([last,cur])
 
-                # print(cur, blocked_ranges_down, blocked_ranges_up, visited)
-                # print(cur, all_ranges, visited)
                 visited.add(cur)
                 direction = not direction
-        # print(cur)
+
         acc += cur
     return acc
 
