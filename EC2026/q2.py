@@ -6,28 +6,24 @@ def solve(n):
     acc = 0
     for line in data:
         alloys = defaultdict(set)
-        comparators = line.split(' ')
-        # print(comparators)
-        for c in comparators:
-            if c[1] == '<':
-                alloys[c[0]].add(c[2])
-                alloys[c[2]] |= set()
+
+        for cmp in line.split(' '):
+            if cmp[1] == '<':
+                alloys[cmp[0]].add(cmp[2])
+                alloys[cmp[2]]
             else:
-                alloys[c[2]].add(c[0])
-                alloys[c[0]] |= set()
-        # print(alloys)
-        # print(len(alloys['2']), len(alloys['3']))
-        order_s = set()
-        order_l = []
+                alloys[cmp[0]]
+                alloys[cmp[2]].add(cmp[0])
+
+        order = {}
         while alloys:
-            for alloy in alloys:
-                if all(a in order_s for a in alloys[alloy]):
-                    order_s.add(alloy)
-                    order_l.append(alloy)
+            for alloy, weaker in alloys.items():
+                if weaker.issubset(order):
+                    order[alloy] = None
                     alloys.pop(alloy)
                     break
-        # print(order_l)
-        acc += int(''.join(order_l))
+
+        acc += int(''.join(order.keys()))
     return acc
 
 
