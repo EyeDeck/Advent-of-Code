@@ -31,7 +31,11 @@ class open_default(object):
             self.fn = f'q{_QUEST}_{n}.txt'
 
     def __enter__(self):
-        self.file = open(self.fn)
+        try:
+            self.file = open(self.fn)
+        except FileNotFoundError:
+            open(self.fn, 'a').close()
+            self.file = open(self.fn)
         return self.file
 
     def __exit__(self, *args):
@@ -44,7 +48,10 @@ def get_ints(s):
 
 def parse_lines(n, func=None):
     with open_default(n) as file:
-        if func:
+        file.seek(0)
+        if not file.read(1):
+            return None
+        elif func:
             return [func(line.strip('\r\n')) for line in file]
         else:
             return [line.strip('\r\n') for line in file]
