@@ -61,24 +61,6 @@ def p2():
     return best_resonance
 
 
-# this is some annoying combinatorics
-# actually pretty useful though, I should think about chucking it in my AoC/EC lib
-def perfect_matchings(elements):
-    def _match(pool):
-        if not pool:
-            yield []
-            return
-
-        first = pool[0]
-        for i in range(1, len(pool)):
-            pair = (first, pool[i])
-            remaining = pool[1:i] + pool[i + 1:]
-            for rest in _match(remaining):
-                yield [pair] + rest
-
-    return _match(elements)
-
-
 def p3():
     portal_ct, shortcuts = parse_input(3)
 

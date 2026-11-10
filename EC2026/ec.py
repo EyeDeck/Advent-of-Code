@@ -387,3 +387,26 @@ def intersect_ranges(a, b, normalize=True):
             i += 1
             j += 1
     return out
+
+
+def perfect_matchings(elements):
+    """generates all unique sets of perfect matchings, one at a time
+    a perfect matching pairs each element with 1 other element
+    input list must be an even length
+    e.g. perfect_matchings([1,2,3,4]) -> [(1, 2), (3, 4)], then [(1, 3), (2, 4)], then [(1, 4), (2, 3)]"""
+    if len(elements) % 2 != 0:
+        die()
+
+    def _match(pool):
+        if not pool:
+            yield []
+            return
+
+        first = pool[0]
+        for i in range(1, len(pool)):
+            pair = (first, pool[i])
+            remaining = pool[1:i] + pool[i + 1:]
+            for rest in _match(remaining):
+                yield [pair] + rest
+
+    return _match(elements)
