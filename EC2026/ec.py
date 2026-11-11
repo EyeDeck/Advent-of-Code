@@ -51,7 +51,9 @@ def parse_lines(n, func=None):
         file.seek(0)
         if not file.read(1):
             return None
-        elif func:
+        file.seek(0)
+
+        if func:
             return [func(line.strip('\r\n')) for line in file]
         else:
             return [line.strip('\r\n') for line in file]
