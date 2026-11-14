@@ -4,6 +4,7 @@ import sys
 from collections import defaultdict, deque
 from functools import lru_cache
 from operator import itemgetter
+import operator
 
 INF = sys.maxsize
 
@@ -216,6 +217,55 @@ def hexdist(a, b):
     x1, y1, z1 = a
     x2, y2, z2 = b
     return (abs(x1 - x2) + abs(y1 - y2) + abs(z1 - z2)) // 2
+
+
+# I had a really stupid idea once
+class EqOp:
+    _OPS = {
+        'gt': operator.gt, '>': operator.gt,
+        'ge': operator.ge, 'gte': operator.ge, '>=': operator.ge,
+        'lt': operator.lt, '<': operator.lt,
+        'le': operator.le, 'lte': operator.le, '<=': operator.le,
+        'eq': operator.eq, '==': operator.eq,
+        'ne': operator.ne, '!=': operator.ne,
+    }
+
+    _SYMBOLS = {
+        operator.gt: '>',
+        operator.ge: '>=',
+        operator.lt: '<',
+        operator.le: '<=',
+        operator.eq: '==',
+        operator.ne: '!=',
+    }
+
+    def __init__(self, op, target):
+        if isinstance(op, str):
+            if op not in self._OPS:
+                raise ValueError(f'Unknown operator string: {op!r}')
+            self.op = self._OPS[op]
+        elif callable(op):
+            self.op = op
+        else:
+            raise TypeError('op must be a string alias or a callable')
+
+        self.target = target
+        self._matched_val = None
+
+    def __eq__(self, other):
+        if isinstance(other, type(self.target)) and self.op(other, self.target):
+            self._matched_val = other
+            return True
+        return False
+
+    def __hash__(self):
+        val = self._matched_val if self._matched_val is not None else self.target
+        return hash(val)
+
+    def __repr__(self):
+        op_label = self._SYMBOLS.get(self.op, getattr(self.op, '__name__', repr(self.op)))
+        matched = f' [matched: {self._matched_val!r}]' if self._matched_val is not None else ''
+        return f'EqOp({op_label!r}, {self.target!r}){matched}'
 
 
 def bfs(src, tgt, neighbors):
