@@ -52,6 +52,11 @@ def solve(part, mult):
     # the x is load-bearing
     data = [Node(c, i, 0, dir_holder) for i, c in enumerate((parse_lines(part)[0] * mult) + 'x')]
 
+    start_node = data[0]  # thankfully this one is always fixed
+
+    if verbose:
+        print(f'\ntotal length of shelf (including sentinel): {len(data)}')
+
     data[0].next = data[1]
     data[-1].prev = data[-2]
     for i, n in enumerate(data[1:-1]):
@@ -85,6 +90,11 @@ def solve(part, mult):
                 break
 
         if r_index <= l_index:
+            while r_index <= l_index:
+                r_index += 1
+                r_pointer = r_pointer.next
+
+            r_pointer.normalize()
 
             while True:
                 nxt = r_pointer.next
@@ -98,7 +108,19 @@ def solve(part, mult):
             dir_holder[0] = True
             r_index = len(data) - 1
 
+            if verbose:
+                print(f'length of unsorted segment after sorting {c}: {r_index - l_index + 1}')
             continue
+
+        if verbose and len(data) < 255:
+            sorted_ll = [start_node]
+            while n := sorted_ll[-1].next:
+                sorted_ll.append(n)
+
+            sorted_ll = [n.data for n in sorted_ll]
+            sorted_ll.insert(r_index+1, "\033[0m")
+            sorted_ll.insert(l_index, "\033[1m")
+            print(f'Flip {flip_ct+1}: {"".join(sorted_ll)}')
 
         l_pointer.prev.next, r_pointer.next.prev, r_pointer.next, l_pointer.prev = r_pointer, l_pointer, l_pointer.prev, r_pointer.next
 
@@ -113,6 +135,6 @@ def solve(part, mult):
 if __name__ == '__main__':
     setquest(16)
 
-    print('part1:', solve(1, 1)[0])
-    print('part2:', solve(2, 10)[1])
-    print('part3:', solve(3, 100)[1])
+    print('part1:', ('[{}] flips, {} flip length' if verbose else '{0}').format(*solve(1, 1)))
+    print('part2:', ('{} flips, [{}] flip length' if verbose else '{1}').format(*solve(2, 10)))
+    print('part3:', ('{} flips, [{}] flip length' if verbose else '{1}').format(*solve(3, 100)))
