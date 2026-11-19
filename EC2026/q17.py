@@ -4,15 +4,8 @@ from ec import *
 def p1():
     grid, inverse, unique = parse_grid(1)
     start, end = min(grid), max(grid)
-    neighbors = {}
-    for point in grid:
-        n = []
-        for d in DIRS:
-            p = vadd(d, point)
-            if p in grid and grid[p] == '#':
-                n.append(p)
-        neighbors[point] = n
 
+    neighbors = pregen_neighbors(grid, DIRS,'.')
     route = bfs(start, end, neighbors)
 
     if verbose:

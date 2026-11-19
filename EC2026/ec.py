@@ -268,6 +268,26 @@ class EqOp:
         return f'EqOp({op_label!r}, {self.target!r}){matched}'
 
 
+def pregen_neighbors(grid, offsets, blacklist=None, whitelist=None):
+    allow_missing = True if (whitelist and None in whitelist) else False
+    neighbors = {}
+    for point in grid:
+        point_neighbors = []
+        for offset in offsets:
+            potential_neighbor = vadd(offset, point)
+            if potential_neighbor not in grid:
+                if allow_missing:
+                    point_neighbors.append(potential_neighbor)
+                else:
+                    continue
+            elif blacklist and grid[potential_neighbor] in blacklist:
+                continue
+            elif not whitelist or grid[potential_neighbor] in whitelist:
+                point_neighbors.append(potential_neighbor)
+        neighbors[point] = point_neighbors
+    return neighbors
+
+
 def bfs(src, tgt, neighbors):
     q = deque([src])
 
