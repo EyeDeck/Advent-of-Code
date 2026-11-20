@@ -66,12 +66,16 @@ def parse_double_break(n):
 
 
 def parse_grid(n, ignore=None):
+    return parse_grid_raw(parse_lines(n), ignore)
+
+
+def parse_grid_raw(data, ignore=None):
     grid = {}
     inverse = defaultdict(list)
     unique = {}
     non_unique = set()
 
-    for y, line in enumerate(parse_lines(n)):
+    for y, line in enumerate(data):
         for x, c in enumerate(line):
             if ignore is None or c not in ignore:
                 grid[x, y] = c
