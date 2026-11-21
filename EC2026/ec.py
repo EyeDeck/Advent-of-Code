@@ -486,3 +486,25 @@ def perfect_matchings(elements):
                 yield [pair] + rest
 
     return _match(elements)
+
+
+def base_repr(number, base=2, padding=0):
+    """
+    literally lifted verbatim from numpy: https://github.com/numpy/numpy/blob/v1.14.2/numpy/core/numeric.py
+    """
+    digits = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    if base > len(digits):
+        raise ValueError("Bases greater than 36 not handled in base_repr.")
+    elif base < 2:
+        raise ValueError("Bases less than 2 not handled in base_repr.")
+
+    num = abs(number)
+    res = []
+    while num:
+        res.append(digits[num % base])
+        num //= base
+    if padding:
+        res.append('0' * padding)
+    if number < 0:
+        res.append('-')
+    return ''.join(reversed(res or '0'))
